@@ -143,6 +143,12 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     }).sort((a, b) => a.date.localeCompare(b.date));
   }
 
+  function formatDateBR(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-");
+    return `${d}/${m}/${y}`;
+  }
+
   return (
     <div className="bg-white rounded-xl p-6 shadow-md">
       <h2 className="text-lg font-semibold mb-4">Classificação Individual</h2>
@@ -167,10 +173,13 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold text-lg shadow">
               {getInitials(m.name || m.full_name || `P${m.id}`)}
             </div>
-            <div className="flex items-center gap-2 truncate">
-              {m.name || m.full_name || `Participante ${m.id}`}
+            {/* Nome truncado e pontos lado a lado, responsivo */}
+            <div className="flex-1 flex items-center min-w-0">
+              <span className="truncate text-base sm:text-base font-medium max-w-[110px] sm:max-w-[180px]" title={m.name || m.full_name || `Participante ${m.id}`}>
+                {m.name || m.full_name || `Participante ${m.id}`}
+              </span>
+              <span className="ml-2 font-bold whitespace-nowrap text-sm sm:text-base">{m.total} pontos</span>
             </div>
-            <div className="ml-auto font-bold">{m.total} pontos</div>
           </li>
         ))}
       </ol>
@@ -197,7 +206,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                 <tbody>
                   {getCheckinsByDay(selectedMember.id).map(dia => (
                     <tr key={dia.date}>
-                      <td>{dia.date}</td>
+                      <td>{formatDateBR(dia.date)}</td>
                       <td className="font-bold">{dia.pontos}</td>
                       <td>
                         {dia.checkins.map(c => (

@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-const COLORS = ["#6366f1", "#f59e42", "#10b981", "#f43f5e", "#fbbf24"];
+const COLORS = ["#2563eb", "#16a34a", "#ea580c"];
 export default function ActivityPieChart({ activities = [] }) {
   const data = Object.entries(
     activities.reduce((acc, a) => {

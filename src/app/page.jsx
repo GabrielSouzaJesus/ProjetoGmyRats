@@ -11,6 +11,7 @@ import MediaGallery from "../components/MediaGallery";
 import CommentsFeed from "../components/CommentsFeed";
 import QuickStats from "../components/QuickStats";
 import ActivityPieChart from "../components/ActivityPieChart";
+import SplashScreen from "../components/SplashScreen";
 
 export default function Home() {
   const [members, setMembers] = useState([]);
@@ -24,6 +25,13 @@ export default function Home() {
   const [challenge, setChallenge] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filesLastModified, setFilesLastModified] = useState({});
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    if (!showSplash) return;
+    const timer = setTimeout(() => setShowSplash(false), 20000);
+    return () => clearTimeout(timer);
+  }, [showSplash]);
 
   useEffect(() => {
     async function fetchData() {
@@ -53,7 +61,23 @@ export default function Home() {
       setLoading(false);
     }
     fetchData();
+
+    // Atualização automática dos comentários e fotos/vídeos recentes
+    const interval = setInterval(async () => {
+      const [med, com] = await Promise.all([
+        fetch("/api/check_in_media").then(res => res.json()),
+        fetch("/api/comments").then(res => res.json()),
+      ]);
+      setMedia(med);
+      setComments(com);
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
   }, []);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (loading) {
     return (
