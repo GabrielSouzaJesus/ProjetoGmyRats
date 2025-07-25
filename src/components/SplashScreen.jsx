@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
-import footballPractice from "../../animacoes/Prática de Futebol.json";
-import sport from "../../animacoes/Esporte.json";
-import Exerciseanimation from "../../animacoes/Animação de exercício.json";
+import footballPractice from "../../animacoes/pratica-de-futebol.json";
+import sport from "../../animacoes/esporte.json";
+import Exerciseanimation from "../../animacoes/animacao-de-exercicio.json";
 
 export default function SplashScreen({ onFinish }) {
   const [showPageMsg, setShowPageMsg] = useState(true);
