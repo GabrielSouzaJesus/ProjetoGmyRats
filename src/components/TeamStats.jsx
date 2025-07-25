@@ -74,7 +74,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
       members: teamMembers,
       teamSize,
     };
-  }).sort((a, b) => b.score - a.score);
+  }).sort((a, b) => b.scoreAjustado - a.scoreAjustado);
 
   return (
     <div className="bg-white rounded-lg shadow p-6 animate-fade-in">
