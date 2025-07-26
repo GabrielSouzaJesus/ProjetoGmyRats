@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { corrigirFusoHorario } from "../lib/utils";
+
 export default function TeamStats({ teams = [], checkins = [], checkInActivities = [], members = [], teamMemberships = [] }) {
   // Função de pontuação igual à usada no LeaderboardCard
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -6,10 +8,12 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const checkinsByDay = {};
     memberCheckIns.forEach(checkin => {
-      const date = (checkin.date || checkin.created_at || "").slice(0, 10);
-      if (!date) return;
-      if (!checkinsByDay[date]) checkinsByDay[date] = [];
-      checkinsByDay[date].push(checkin);
+      // Corrige o fuso horário para contabilizar corretamente
+      const date = corrigirFusoHorario(checkin.date || checkin.created_at || "");
+      if (date) {
+        if (!checkinsByDay[date]) checkinsByDay[date] = [];
+        checkinsByDay[date].push(checkin);
+      }
     });
 
     let total = 0;
@@ -77,51 +81,203 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
   }).sort((a, b) => b.scoreAjustado - a.scoreAjustado);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-4">Ranking por Equipe</h2>
-      <ol className="space-y-2">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Ranking por Equipe</h2>
+          <p className="text-gray-600 text-sm">Competição entre equipes</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+            {teamRanking.length} equipes
+          </div>
+        </div>
+      </div>
+
+      {/* Top 3 Teams Podium */}
+      {teamRanking.length >= 3 && (
+        <div className="mb-6">
+          <div className="flex items-end justify-center space-x-4 mb-4">
+            {/* 2nd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
+                🥈
+              </div>
+              <div className="bg-gray-100 rounded-xl p-4 text-center min-w-[120px]">
+                <div className="text-sm font-semibold text-gray-700 truncate">{teamRanking[1]?.name || 'Equipe'}</div>
+                <div className="text-lg font-bold text-gray-900">{teamRanking[1]?.scoreAjustado.toFixed(2)} pts</div>
+                <div className="text-xs text-gray-500">({teamRanking[1]?.score} / {teamRanking[1]?.teamSize})</div>
+              </div>
+            </div>
+            
+            {/* 1st Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-24 h-24 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-2">
+                🥇
+              </div>
+              <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-center min-w-[140px] text-white">
+                <div className="text-sm font-semibold truncate">{teamRanking[0]?.name || 'Equipe'}</div>
+                <div className="text-lg font-bold">{teamRanking[0]?.scoreAjustado.toFixed(2)} pts</div>
+                <div className="text-xs opacity-90">({teamRanking[0]?.score} / {teamRanking[0]?.teamSize})</div>
+              </div>
+            </div>
+            
+            {/* 3rd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
+                🥉
+              </div>
+              <div className="bg-orange-100 rounded-xl p-4 text-center min-w-[120px]">
+                <div className="text-sm font-semibold text-orange-700 truncate">{teamRanking[2]?.name || 'Equipe'}</div>
+                <div className="text-lg font-bold text-orange-900">{teamRanking[2]?.scoreAjustado.toFixed(2)} pts</div>
+                <div className="text-xs text-orange-600">({teamRanking[2]?.score} / {teamRanking[2]?.teamSize})</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teams List */}
+      <div className="space-y-4">
         {teamRanking.map((team, i) => (
-          <li
+          <div
             key={team.id}
-            className="flex items-center gap-3 cursor-pointer hover:bg-indigo-50 rounded transition"
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group"
             onClick={() => setSelectedTeam(team)}
           >
-            <span className="text-xl w-6">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</span>
-            <div className="font-bold">{team.name || `Equipe ${team.id}`}</div>
-            <div className="ml-auto font-bold">
-              {team.scoreAjustado.toFixed(2)} pontos
-              <span className="block text-xs text-gray-400">
-                ({team.score} pts / {team.teamSize} pessoas)
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+                  i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                  i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                  i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                  'bg-gradient-to-r from-laranja-600 to-verde-600'
+                }`}>
+                  {i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 truncate" title={team.name || `Equipe ${team.id}`}>
+                    {team.name || `Equipe ${team.id}`}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {team.members.length} membros • {i + 1}º lugar
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`px-4 py-2 rounded-full text-white font-bold text-sm ${
+                  team.scoreAjustado >= 8 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                  team.scoreAjustado >= 5 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                  team.scoreAjustado >= 3 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                  'bg-gradient-to-r from-gray-500 to-gray-600'
+                }`}>
+                  {team.scoreAjustado.toFixed(2)} pontos
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  ({team.score} pts / {team.teamSize} pessoas)
+                </p>
+              </div>
             </div>
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
+
+      {/* Team Details Modal */}
       {selectedTeam && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-md relative animate-fade-in">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xl"
-              onClick={() => setSelectedTeam(null)}
-              title="Fechar"
-            >×</button>
-            <h3 className="text-lg font-bold mb-4">
-              Membros da equipe: {selectedTeam.name}
-            </h3>
-            <ul>
-              {selectedTeam.members
-                .map(m => ({
-                  ...m,
-                  pontos: getMemberScoreWithRules(m.id)
-                }))
-                .sort((a, b) => b.pontos - a.pontos)
-                .map(m => (
-                  <li key={m.id} className="flex justify-between items-center mb-2">
-                    <span>{getMemberName(m.id)}</span>
-                    <span className="font-bold">{m.pontos} pts</span>
-                  </li>
-              ))}
-            </ul>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-fade-in">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-xl font-bold">🏆</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">
+                      {selectedTeam.name}
+                    </h3>
+                    <p className="text-white/80 text-sm">
+                      {selectedTeam.members.length} membros • {selectedTeam.score} pontos totais
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  onClick={() => setSelectedTeam(null)}
+                  title="Fechar"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="p-6 border-b border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl p-4">
+                  <div className="text-2xl font-bold">{selectedTeam.scoreAjustado.toFixed(2)}</div>
+                  <div className="text-sm opacity-90">Pontos por pessoa</div>
+                </div>
+                <div className="bg-gradient-to-r from-verde-600 to-laranja-600 text-white rounded-xl p-4">
+                  <div className="text-2xl font-bold">{selectedTeam.score}</div>
+                  <div className="text-sm opacity-90">Pontos totais</div>
+                </div>
+                <div className="bg-gradient-to-r from-laranja-600 to-azul-600 text-white rounded-xl p-4">
+                  <div className="text-2xl font-bold">{selectedTeam.members.length}</div>
+                  <div className="text-sm opacity-90">Membros</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Members List */}
+            <div className="p-6 max-h-[50vh] overflow-y-auto">
+              <h4 className="font-semibold text-gray-900 mb-4">Ranking dos Membros</h4>
+              <div className="space-y-3">
+                {selectedTeam.members
+                  .map(m => ({
+                    ...m,
+                    pontos: getMemberScoreWithRules(m.id)
+                  }))
+                  .sort((a, b) => b.pontos - a.pontos)
+                  .map((m, index) => (
+                    <div key={m.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                            index === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                            index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                            index === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                            'bg-gradient-to-r from-azul-600 to-verde-600'
+                          }`}>
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-gray-900">
+                              {getMemberName(m.id)}
+                            </h5>
+                            <p className="text-sm text-gray-500">
+                              {m.pontos} {m.pontos === 1 ? 'ponto' : 'pontos'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`px-3 py-1 rounded-full text-white font-bold text-sm ${
+                            m.pontos >= 10 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                            m.pontos >= 5 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                            'bg-gradient-to-r from-gray-500 to-gray-600'
+                          }`}>
+                            {m.pontos} pts
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

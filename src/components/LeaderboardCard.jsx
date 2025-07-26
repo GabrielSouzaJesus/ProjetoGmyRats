@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { corrigirFusoHorario } from "../lib/utils";
 
 function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
   // 1. Filtra todos os check-ins do membro
@@ -8,7 +9,8 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
   const checkinsByDay = {};
 
   memberCheckIns.forEach(checkin => {
-    const date = (checkin.occurred_at || checkin.created_at || "").slice(0, 10);
+    // Corrige o fuso horário para contabilizar corretamente
+    const date = corrigirFusoHorario(checkin.occurred_at || checkin.created_at || "");
     if (!date) return;
     if (!checkinsByDay[date]) checkinsByDay[date] = [];
     checkinsByDay[date].push(checkin);
@@ -69,6 +71,8 @@ function getInitials(name) {
 export default function LeaderboardCard({ members = [], checkins = [], checkInActivities = [] }) {
   const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
+  const [showAllParticipants, setShowAllParticipants] = useState(false);
+  
   // Loga os dados recebidos
   console.log("LeaderboardCard - members:", members);
   console.log("LeaderboardCard - checkins:", checkins);
@@ -90,23 +94,24 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     return total;
   }
 
-  const ranking = members
+  const allRanking = members
     .map(m => ({
       ...m,
       total: getMemberScoreWithRules(m.id, checkins, checkInActivities)
     }))
     .filter(m => m.total > 0)
     .filter(m => !search || (m.name || m.full_name || "").toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => Number(b.total) - Number(a.total))
-    .slice(0, 10);
+    .sort((a, b) => Number(b.total) - Number(a.total));
 
-  const maiorPontuacao = ranking.length > 0 ? ranking[0].total : 0;
+  const ranking = showAllParticipants ? allRanking : allRanking.slice(0, 10);
+  const maiorPontuacao = allRanking.length > 0 ? allRanking[0].total : 0;
 
   function getCheckinsByDay(memberId) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const byDay = {};
     memberCheckIns.forEach(checkin => {
-      const date = (checkin.occurred_at || checkin.created_at || "").slice(0, 10);
+      // Corrige o fuso horário para contabilizar corretamente
+      const date = corrigirFusoHorario(checkin.occurred_at || checkin.created_at || "");
       if (!date) return;
       if (!byDay[date]) byDay[date] = [];
       byDay[date].push(checkin);
@@ -150,75 +155,238 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Classificação Individual</h2>
-      <input
-        type="text"
-        placeholder="Buscar participante..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        className="mb-4 p-2 rounded border w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        autoComplete="off"
-      />
-      <ol className="space-y-2">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Classificação Individual</h2>
+          <p className="text-gray-600 text-sm">Ranking dos participantes</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+            {allRanking.length} participantes
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input
+          type="text"
+          placeholder="Buscar participante..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-azul-600 focus:border-transparent transition-all"
+          autoComplete="off"
+        />
+      </div>
+
+      {/* Top 3 Podium */}
+      {ranking.length >= 3 && !search && !showAllParticipants && (
+        <div className="mb-6">
+          <div className="flex items-end justify-center space-x-2 mb-4">
+            {/* 2nd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
+                {getInitials(ranking[1]?.name || ranking[1]?.full_name || '')}
+              </div>
+              <div className="bg-gray-100 rounded-lg p-3 text-center min-w-[80px]">
+                <div className="text-sm font-semibold text-gray-700">{ranking[1]?.name || ranking[1]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold text-gray-900">{ranking[1]?.total} pts</div>
+              </div>
+            </div>
+            
+            {/* 1st Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
+                {getInitials(ranking[0]?.name || ranking[0]?.full_name || '')}
+              </div>
+              <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-3 text-center min-w-[100px] text-white">
+                <div className="text-sm font-semibold">{ranking[0]?.name || ranking[0]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold">{ranking[0]?.total} pts</div>
+              </div>
+            </div>
+            
+            {/* 3rd Place */}
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
+                {getInitials(ranking[2]?.name || ranking[2]?.full_name || '')}
+              </div>
+              <div className="bg-orange-100 rounded-lg p-3 text-center min-w-[80px]">
+                <div className="text-sm font-semibold text-orange-700">{ranking[2]?.name || ranking[2]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold text-orange-900">{ranking[2]?.total} pts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Participants List */}
+      <div className="space-y-3">
         {ranking.map((m, i) => (
-          <li
+          <div
             key={m.id}
-            className={`flex items-center gap-3 rounded-xl p-2 transition cursor-pointer hover:bg-indigo-50`}
+            className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group ${
+              i < 3 && !search && !showAllParticipants ? 'hidden' : ''
+            }`}
             onClick={() => setSelectedMember(m)}
           >
-            <span className="text-xl w-6">
-            
-            </span>
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold text-lg shadow">
-              {getInitials(m.name || m.full_name || `P${m.id}`)}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+                  i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                  i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                  i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                  'bg-gradient-to-r from-azul-600 to-verde-600'
+                }`}>
+                  {i < 3 ? ['🥇', '🥈', '🥉'][i] : getInitials(m.name || m.full_name || `P${m.id}`)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 truncate" title={m.name || m.full_name || `Participante ${m.id}`}>
+                    {m.name || m.full_name || `Participante ${m.id}`}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {i + 1}º lugar
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`px-4 py-2 rounded-full text-white font-bold text-sm ${
+                  m.total >= 15 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                  m.total >= 10 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                  m.total >= 5 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                  'bg-gradient-to-r from-gray-500 to-gray-600'
+                }`}>
+                  {m.total} pontos
+                </div>
+              </div>
             </div>
-            {/* Nome truncado e pontos lado a lado, responsivo */}
-            <div className="flex-1 flex items-center min-w-0">
-              <span className="truncate text-base sm:text-base font-medium max-w-[110px] sm:max-w-[180px]" title={m.name || m.full_name || `Participante ${m.id}`}>
-                {m.name || m.full_name || `Participante ${m.id}`}
-              </span>
-              <span className="ml-2 font-bold whitespace-nowrap text-sm sm:text-base">{m.total} pontos</span>
-            </div>
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
+
+      {/* Show All Participants Button */}
+      {!showAllParticipants && allRanking.length > 10 && !search && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setShowAllParticipants(true)}
+            className="bg-gradient-to-r from-verde-600 to-azul-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-verde-700 hover:to-azul-700 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Visualizar todos os participantes ({allRanking.length})
+          </button>
+        </div>
+      )}
+
+      {/* Show Less Button */}
+      {showAllParticipants && !search && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setShowAllParticipants(false)}
+            className="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+          >
+            Mostrar apenas top 10
+          </button>
+        </div>
+      )}
+
+      {/* Audit Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-md relative animate-fade-in">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xl"
-              onClick={() => setSelectedMember(null)}
-              title="Fechar"
-            >×</button>
-            <h3 className="text-lg font-bold mb-2">
-              Auditoria de {selectedMember.name || selectedMember.full_name}
-            </h3>
-            <div className="max-h-80 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className="text-left">Data</th>
-                    <th className="text-left">Pontos</th>
-                    <th className="text-left">Check-ins</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getCheckinsByDay(selectedMember.id).map(dia => (
-                    <tr key={dia.date}>
-                      <td>{formatDateBR(dia.date)}</td>
-                      <td className="font-bold">{dia.pontos}</td>
-                      <td>
-                        {dia.checkins.map(c => (
-                          <span key={c.id} className="inline-block bg-gray-100 rounded px-2 py-1 mr-1 mb-1">
-                            {c.title || c.description || c.id}
-                          </span>
-                        ))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-fade-in">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-xl font-bold">
+                      {getInitials(selectedMember.name || selectedMember.full_name)}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">
+                      Auditoria de {selectedMember.name || selectedMember.full_name}
+                    </h3>
+                    <p className="text-white/80 text-sm">
+                      Total: {selectedMember.total} pontos
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                  onClick={() => setSelectedMember(null)}
+                  title="Fechar"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-4">
+                {getCheckinsByDay(selectedMember.id).map((dia, index) => (
+                  <div key={dia.date} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                          dia.pontos === 3 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' : 'bg-gradient-to-r from-azul-600 to-verde-600'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">
+                            {formatDateBR(dia.date)}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {new Date(dia.date).toLocaleDateString('pt-BR', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`px-3 py-1 rounded-full text-white font-bold text-sm ${
+                          dia.pontos === 3 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' : 'bg-gradient-to-r from-azul-600 to-verde-600'
+                        }`}>
+                          {dia.pontos} {dia.pontos === 1 ? 'ponto' : 'pontos'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {dia.checkins.map((checkin, idx) => (
+                        <div key={checkin.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900 mb-1">
+                                {checkin.title || checkin.description || `Check-in ${idx + 1}`}
+                              </p>
+                              {checkin.notes && (
+                                <p className="text-sm text-gray-600">{checkin.notes}</p>
+                              )}
+                            </div>
+                            <div className="ml-3 text-right">
+                              <div className="text-xs text-gray-500">
+                                {checkin.duration ? `${Math.round(checkin.duration)}min` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

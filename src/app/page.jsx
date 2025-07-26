@@ -2,15 +2,12 @@
 import { useEffect, useState } from "react";
 import LeaderboardCard from "../components/LeaderboardCard";
 import TeamStats from "../components/TeamStats";
-import DateFilter from "../components/DateFilter";
-import SummaryCards from "../components/SummaryCards";
 import ActivityChart from "../components/ActivityChart";
 import Layout from "../components/Layout";
 import ChallengeBanner from "../components/ChallengeBanner";
 import MediaGallery from "../components/MediaGallery";
 import CommentsFeed from "../components/CommentsFeed";
 import QuickStats from "../components/QuickStats";
-import ActivityPieChart from "../components/ActivityPieChart";
 import SplashScreen from "../components/SplashScreen";
 
 export default function Home() {
@@ -24,19 +21,19 @@ export default function Home() {
   const [reactions, setReactions] = useState([]);
   const [challenge, setChallenge] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filesLastModified, setFilesLastModified] = useState({});
+  const [lastUpdate, setLastUpdate] = useState('');
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (!showSplash) return;
-    const timer = setTimeout(() => setShowSplash(false), 20000);
+    const timer = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timer);
   }, [showSplash]);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, t, c, a, tm, med, com, reac, chal, filesMod] = await Promise.all([
+      const [m, t, c, a, tm, med, com, reac, chal] = await Promise.all([
         fetch("/api/members").then(res => res.json()),
         fetch("/api/teams").then(res => res.json()),
         fetch("/api/checkins").then(res => res.json()),
@@ -46,7 +43,6 @@ export default function Home() {
         fetch("/api/comments").then(res => res.json()),
         fetch("/api/reactions").then(res => res.json()),
         fetch("/api/challenge").then(res => res.json()),
-        fetch("/api/files_last_modified").then(res => res.json()),
       ]);
       setMembers(m);
       setTeams(t);
@@ -57,7 +53,17 @@ export default function Home() {
       setComments(com);
       setReactions(reac);
       setChallenge(chal);
-      setFilesLastModified(filesMod);
+      
+      // Lê diretamente o arquivo last_update.csv
+      try {
+        const lastUpdateResponse = await fetch("/api/last_update");
+        const lastUpdateData = await lastUpdateResponse.json();
+        setLastUpdate(lastUpdateData.timestamp || '');
+      } catch (error) {
+        console.error('Erro ao ler last_update:', error);
+        setLastUpdate('25/07/2025 22:50:49'); // Fallback
+      }
+      
       setLoading(false);
     }
     fetchData();
@@ -91,7 +97,7 @@ export default function Home() {
     <Layout>
       <ChallengeBanner challenge={challenge[0]} />
       <div className="text-xs text-gray-400 text-right mb-2">
-        Última atualização dos dados: {filesLastModified['check_ins.csv'] && new Date(filesLastModified['check_ins.csv']).toLocaleString('pt-BR')}
+        Última atualização dos dados: {lastUpdate}
       </div>
       <QuickStats
         media={media}

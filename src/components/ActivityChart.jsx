@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { corrigirFusoHorario } from "../lib/utils";
 
 export default function ActivityChart({ checkins = [] }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -8,31 +9,30 @@ export default function ActivityChart({ checkins = [] }) {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
     };
+    
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const data = Object.values(
     checkins.reduce((acc, c) => {
-      const date = (c.created_at || c.occurred_at || "").slice(0, 10);
-      if (!date) return acc;
-      acc[date] = acc[date] || { date, checkins: 0 };
-      acc[date].checkins += 1;
+      // Corrige o fuso horário para contabilizar corretamente
+      const date = corrigirFusoHorario(c.created_at || c.occurred_at || "");
+      if (date) {
+        acc[date] = acc[date] || { date, checkins: 0 };
+        acc[date].checkins += 1;
+      }
       return acc;
     }, {})
   );
 
-  // Função para mostrar só o dia ou ocultar rótulos no mobile
   const xTickFormatter = isMobile
     ? (date, idx) => {
-        // Mostra só o dia ("24" de "2025-07-24")
-        if (!date) return "";
-        // Exibe apenas o primeiro e o último rótulo para não poluir
         if (idx === 0 || idx === data.length - 1) {
-          return date.slice(8, 10);
+          return date.split('-')[2]; // Retorna apenas o dia
         }
-        return "";
+        return '';
       }
     : (date) => date;
 
