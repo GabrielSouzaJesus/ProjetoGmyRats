@@ -1,9 +1,18 @@
 import { useState } from "react";
 import { corrigirFusoHorario } from "../lib/utils";
 
+const TAMANHO_EQUIPE = {
+  "Dados e Indicadores": 12,
+  "Pós Operação": 15,
+  "Estudos e Proteção": 21,
+  "Planejamento de Redes": 12,
+};
+
 export default function TeamStats({ teams = [], checkins = [], checkInActivities = [], members = [], teamMemberships = [] }) {
   // Função de pontuação igual à usada no LeaderboardCard
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [search, setSearch] = useState("");
+  const [showAllTeams, setShowAllTeams] = useState(false);
   function getMemberScoreWithRules(memberId) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const checkinsByDay = {};
@@ -100,7 +109,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 3 Equipes</h3>
           <div className="grid grid-cols-3 gap-1 sm:gap-4">
-            {ranking.slice(0, 3).map((team, i) => (
+            {teamRanking.slice(0, 3).map((team, i) => (
               <div key={team.id} className="text-center">
                 <div className={`w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg lg:text-xl shadow-lg mb-2 ${
                   i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
@@ -281,9 +290,3 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
   );
 }
 
-const TAMANHO_EQUIPE = {
-  "Dados e Indicadores": 12,
-  "Pós Operação": 15,
-  "Estudos e Proteção": 21,
-  "Planejamento de Redes": 12,
-};
