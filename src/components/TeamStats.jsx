@@ -11,8 +11,8 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
       // Corrige o fuso horário para contabilizar corretamente
       const date = corrigirFusoHorario(checkin.date || checkin.created_at || "");
       if (date) {
-        if (!checkinsByDay[date]) checkinsByDay[date] = [];
-        checkinsByDay[date].push(checkin);
+      if (!checkinsByDay[date]) checkinsByDay[date] = [];
+      checkinsByDay[date].push(checkin);
       }
     });
 
@@ -96,59 +96,56 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
       </div>
 
       {/* Top 3 Teams Podium */}
-      {teamRanking.length >= 3 && (
+      {!search && !showAllTeams && (
         <div className="mb-6">
-          <div className="flex items-end justify-center space-x-4 mb-4">
-            {/* 2nd Place */}
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
-                🥈
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 3 Equipes</h3>
+          <div className="grid grid-cols-3 gap-1 sm:gap-4">
+            {ranking.slice(0, 3).map((team, i) => (
+              <div key={team.id} className="text-center">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg lg:text-xl shadow-lg mb-2 ${
+                  i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                  i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                  'bg-gradient-to-r from-orange-600 to-orange-700'
+                }`}>
+                  {['🥇', '🥈', '🥉'][i]}
+                </div>
+                <div className={`p-1 sm:p-2 lg:p-3 rounded-lg text-center ${
+                  i === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border border-yellow-200' :
+                  i === 1 ? 'bg-gradient-to-r from-gray-400/10 to-gray-500/10 border border-gray-200' :
+                  'bg-gradient-to-r from-orange-600/10 to-orange-700/10 border border-orange-200'
+                }`}>
+                  <h4 className="font-semibold text-gray-900 text-xs sm:text-sm lg:text-base truncate" title={team.name || `Equipe ${team.id}`}>
+                    {team.name || `Equipe ${team.id}`}
+                  </h4>
+                  <div className={`text-white font-bold text-xs sm:text-sm mt-1 px-1 sm:px-2 py-1 rounded-full inline-block ${
+                    team.scoreAjustado >= 8 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                    team.scoreAjustado >= 5 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                    team.scoreAjustado >= 3 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                    'bg-gradient-to-r from-gray-500 to-gray-600'
+                  }`}>
+                    {team.scoreAjustado.toFixed(2)} pts
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 hidden sm:block">
+                    ({team.score} pts / {team.teamSize} pessoas)
+                  </p>
+                </div>
               </div>
-              <div className="bg-gray-100 rounded-xl p-4 text-center min-w-[120px]">
-                <div className="text-sm font-semibold text-gray-700 truncate">{teamRanking[1]?.name || 'Equipe'}</div>
-                <div className="text-lg font-bold text-gray-900">{teamRanking[1]?.scoreAjustado.toFixed(2)} pts</div>
-                <div className="text-xs text-gray-500">({teamRanking[1]?.score} / {teamRanking[1]?.teamSize})</div>
-              </div>
-            </div>
-            
-            {/* 1st Place */}
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-2">
-                🥇
-              </div>
-              <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-center min-w-[140px] text-white">
-                <div className="text-sm font-semibold truncate">{teamRanking[0]?.name || 'Equipe'}</div>
-                <div className="text-lg font-bold">{teamRanking[0]?.scoreAjustado.toFixed(2)} pts</div>
-                <div className="text-xs opacity-90">({teamRanking[0]?.score} / {teamRanking[0]?.teamSize})</div>
-              </div>
-            </div>
-            
-            {/* 3rd Place */}
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
-                🥉
-              </div>
-              <div className="bg-orange-100 rounded-xl p-4 text-center min-w-[120px]">
-                <div className="text-sm font-semibold text-orange-700 truncate">{teamRanking[2]?.name || 'Equipe'}</div>
-                <div className="text-lg font-bold text-orange-900">{teamRanking[2]?.scoreAjustado.toFixed(2)} pts</div>
-                <div className="text-xs text-orange-600">({teamRanking[2]?.score} / {teamRanking[2]?.teamSize})</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Teams List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {teamRanking.map((team, i) => (
           <div
             key={team.id}
-            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group"
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group"
             onClick={() => setSelectedTeam(team)}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg flex-shrink-0 ${
                   i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
                   i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
                   i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
@@ -156,27 +153,26 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
                 }`}>
                   {i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate" title={team.name || `Equipe ${team.id}`}>
-                    {team.name || `Equipe ${team.id}`}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {team.members.length} membros • {i + 1}º lugar
-                  </p>
+                <div className="flex-1 min-w-0 flex items-center">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base" title={team.name || `Equipe ${team.id}`}>
+                      {team.name || `Equipe ${team.id}`}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">
+                      {team.members.length} membros • {i + 1}º lugar
+                    </p>
+                  </div>
+                  <div className="ml-2 flex-shrink-0">
+                    <div className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm whitespace-nowrap ${
+                      team.scoreAjustado >= 8 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                      team.scoreAjustado >= 5 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                      team.scoreAjustado >= 3 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                      'bg-gradient-to-r from-gray-500 to-gray-600'
+                    }`}>
+                      {team.scoreAjustado.toFixed(2)} pts
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className={`px-4 py-2 rounded-full text-white font-bold text-sm ${
-                  team.scoreAjustado >= 8 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                  team.scoreAjustado >= 5 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
-                  team.scoreAjustado >= 3 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
-                  'bg-gradient-to-r from-gray-500 to-gray-600'
-                }`}>
-                  {team.scoreAjustado.toFixed(2)} pontos
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  ({team.score} pts / {team.teamSize} pessoas)
-                </p>
               </div>
             </div>
           </div>
@@ -203,10 +199,10 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
                     </p>
                   </div>
                 </div>
-                <button
+            <button
                   className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
-                  onClick={() => setSelectedTeam(null)}
-                  title="Fechar"
+              onClick={() => setSelectedTeam(null)}
+              title="Fechar"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -237,12 +233,12 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
             <div className="p-4 sm:p-6 max-h-[55vh] sm:max-h-[50vh] overflow-y-auto">
               <h4 className="font-semibold text-gray-900 mb-4">Ranking dos Membros</h4>
               <div className="space-y-3">
-                {selectedTeam.members
-                  .map(m => ({
-                    ...m,
-                    pontos: getMemberScoreWithRules(m.id)
-                  }))
-                  .sort((a, b) => b.pontos - a.pontos)
+              {selectedTeam.members
+                .map(m => ({
+                  ...m,
+                  pontos: getMemberScoreWithRules(m.id)
+                }))
+                .sort((a, b) => b.pontos - a.pontos)
                   .map((m, index) => (
                     <div key={m.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:bg-gray-100 transition-colors">
                       <div className="flex items-center justify-between">
