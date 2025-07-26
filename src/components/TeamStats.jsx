@@ -185,10 +185,10 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
 
       {/* Team Details Modal */}
       {selectedTeam && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden animate-fade-in">
             {/* Header */}
-            <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-6 rounded-t-2xl">
+            <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-4 sm:p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -216,7 +216,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
             </div>
 
             {/* Stats Cards */}
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-4 sm:p-6 border-b border-gray-100">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl p-4">
                   <div className="text-2xl font-bold">{selectedTeam.scoreAjustado.toFixed(2)}</div>
@@ -234,7 +234,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
             </div>
 
             {/* Members List */}
-            <div className="p-6 max-h-[50vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 max-h-[55vh] sm:max-h-[50vh] overflow-y-auto">
               <h4 className="font-semibold text-gray-900 mb-4">Ranking dos Membros</h4>
               <div className="space-y-3">
                 {selectedTeam.members

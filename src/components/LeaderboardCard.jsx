@@ -296,19 +296,19 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Audit Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden animate-fade-in">
             {/* Header */}
-            <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-6 rounded-t-2xl">
+            <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-4 sm:p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-xl font-bold">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-lg sm:text-xl font-bold">
                       {getInitials(selectedMember.name || selectedMember.full_name)}
                     </span>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold truncate">
                       Auditoria de {selectedMember.name || selectedMember.full_name}
                     </h3>
                     <p className="text-white/80 text-sm">
@@ -329,10 +329,10 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             </div>
 
             {/* Content */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 max-h-[65vh] sm:max-h-[60vh] overflow-y-auto">
               <div className="space-y-4">
                 {getCheckinsByDay(selectedMember.id).map((dia, index) => (
-                  <div key={dia.date} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div key={dia.date} className="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
@@ -344,14 +344,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                           <h4 className="font-semibold text-gray-900">
                             {formatDateBR(dia.date)}
                           </h4>
-                          <p className="text-sm text-gray-500">
-                            {new Date(dia.date).toLocaleDateString('pt-BR', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
-                            })}
-                          </p>
+                          {/* Removida a data completa para evitar confusão */}
                         </div>
                       </div>
                       <div className="text-right">
@@ -365,7 +358,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                     
                     <div className="space-y-2">
                       {dia.checkins.map((checkin, idx) => (
-                        <div key={checkin.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                        <div key={checkin.id} className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <p className="font-medium text-gray-900 mb-1">
