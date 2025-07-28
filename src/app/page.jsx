@@ -104,23 +104,36 @@ export default function Home() {
         comments={comments}
         reactions={reactions}
         checkins={checkins}
-        diasDesafio={Math.max(1, (new Date(challenge[0]?.end_date) - new Date(challenge[0]?.start_date)) / (1000 * 60 * 60 * 24))}
+        challenge={challenge[0]}
+        members={members}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities}/>
         <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <MediaGallery media={media} />
+        <MediaGallery 
+          media={media} 
+          members={members}
+        />
         <CommentsFeed
           comments={comments}
           getMemberName={id => {
             const member = members.find(m => String(m.id) === String(id));
             return member?.name || member?.full_name || `Participante ${id}`;
           }}
+          members={members}
+          teams={teams}
+          teamMemberships={teamMemberships}
         />
       </div>
-      <ActivityChart checkins={checkins} />
+      <ActivityChart 
+        checkins={checkins} 
+        teams={teams}
+        members={members}
+        teamMemberships={teamMemberships}
+        challenge={challenge[0]}
+      />
       {/* <ActivityPieChart activities={checkInActivities} /> */}
     </Layout>
   );
