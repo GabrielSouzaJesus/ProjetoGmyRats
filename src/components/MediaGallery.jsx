@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export default function MediaGallery({ media = [], members = [] }) {
-  const [visibleMedia, setVisibleMedia] = useState(72);
+  const [visibleMedia, setVisibleMedia] = useState(12);
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -81,7 +81,7 @@ export default function MediaGallery({ media = [], members = [] }) {
         </p>
       </div>
 
-      {/* Grid de mídia */}
+      {/* Grid de mídia - altura automática */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {displayedMedia.length > 0 ? (
           displayedMedia.map(item => (
@@ -144,7 +144,7 @@ export default function MediaGallery({ media = [], members = [] }) {
         )}
       </div>
 
-      {/* Botão "Ver mais" */}
+      {/* Botão "Ver mais" e informações adicionais fora do grid */}
       {hasMoreMedia && (
         <div className="text-center mt-4 sm:mt-6">
           <button
@@ -155,8 +155,6 @@ export default function MediaGallery({ media = [], members = [] }) {
           </button>
         </div>
       )}
-
-      {/* Informações adicionais */}
       <div className="mt-3 sm:mt-4 text-center">
         <p className="text-gray-500 text-xs sm:text-sm">
           📸 Mostrando todas as mídias disponíveis
