@@ -16,8 +16,11 @@ export default function MediaGallery({ media = [], members = [] }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const displayedMedia = media.slice(0, visibleMedia);
+  const displayedMedia = media
+    .sort((a, b) => new Date(b.created_at || b.updated_at) - new Date(a.created_at || a.updated_at))
+    .slice(0, visibleMedia);
   const hasMoreMedia = visibleMedia < media.length;
+  const hasLessMedia = visibleMedia > 12;
 
   // Estatísticas
   const totalMedia = media.length;
@@ -145,16 +148,24 @@ export default function MediaGallery({ media = [], members = [] }) {
       </div>
 
       {/* Botão "Ver mais" e informações adicionais fora do grid */}
-      {hasMoreMedia && (
-        <div className="text-center mt-4 sm:mt-6">
+      <div className="text-center mt-4 sm:mt-6 space-y-2">
+        {hasMoreMedia && (
           <button
             onClick={() => setVisibleMedia(prev => prev + 12)}
-            className="bg-gradient-to-r from-azul-600 to-verde-600 text-white px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-azul-600 to-verde-600 text-white px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-medium hover:shadow-lg transition-all duration-300 hover:scale-105 mr-2"
           >
             Ver mais 12 mídias
           </button>
-        </div>
-      )}
+        )}
+        {hasLessMedia && (
+          <button
+            onClick={() => setVisibleMedia(prev => Math.max(12, prev - 12))}
+            className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+          >
+            Ver menos 12 mídias
+          </button>
+        )}
+      </div>
       <div className="mt-3 sm:mt-4 text-center">
         <p className="text-gray-500 text-xs sm:text-sm">
           📸 Mostrando todas as mídias disponíveis
