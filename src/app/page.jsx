@@ -26,7 +26,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!showSplash) return;
-    const timer = setTimeout(() => setShowSplash(false), 5000);
+    const timer = setTimeout(() => setShowSplash(false), 15000); // Reduzido para 15 segundos
     return () => clearTimeout(timer);
   }, [showSplash]);
 
