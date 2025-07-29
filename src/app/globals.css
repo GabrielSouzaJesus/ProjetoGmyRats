@@ -111,18 +111,22 @@ body {
 }
 
 @keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% {
+    transform: translateY(-8px) translateX(8px) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) translateX(8px) scale(1.1);
+  }
 }
 
-@keyframes glow-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    transform: scale(1);
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  50% { 
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
-    transform: scale(1.02);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

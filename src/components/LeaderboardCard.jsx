@@ -106,6 +106,31 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   const ranking = showAllParticipants ? allRanking : allRanking.slice(0, 10);
   const maiorPontuacao = allRanking.length > 0 ? allRanking[0].total : 0;
 
+  // Função para calcular ranking correto com empates
+  function calculateRanking(members) {
+    if (members.length === 0) return [];
+    
+    let currentRank = 1;
+    let currentScore = members[0].total;
+    let membersWithRank = [];
+    
+    members.forEach((member, index) => {
+      if (member.total < currentScore) {
+        currentRank = index + 1;
+        currentScore = member.total;
+      }
+      
+      membersWithRank.push({
+        ...member,
+        rank: currentRank
+      });
+    });
+    
+    return membersWithRank;
+  }
+
+  const rankingWithRanks = calculateRanking(ranking);
+
   function getCheckinsByDay(memberId) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const byDay = {};
@@ -163,7 +188,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
           <p className="text-gray-600 text-sm">Ranking dos participantes</p>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
             {allRanking.length} participantes
           </div>
         </div>
@@ -187,39 +212,39 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       </div>
 
       {/* Top 3 Podium */}
-      {ranking.length >= 3 && !search && !showAllParticipants && (
+      {rankingWithRanks.length >= 3 && !search && !showAllParticipants && (
         <div className="mb-6">
           <div className="flex items-end justify-center space-x-2 mb-4">
             {/* 2nd Place */}
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(ranking[1]?.name || ranking[1]?.full_name || '')}
+                {getInitials(rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name || '')}
               </div>
               <div className="bg-gray-100 rounded-lg p-3 text-center min-w-[80px]">
-                <div className="text-sm font-semibold text-gray-700">{ranking[1]?.name || ranking[1]?.full_name || 'Participante'}</div>
-                <div className="text-lg font-bold text-gray-900">{ranking[1]?.total} pts</div>
+                <div className="text-sm font-semibold text-gray-700">{rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold text-gray-900">{rankingWithRanks[1]?.total} pts</div>
               </div>
             </div>
             
             {/* 1st Place */}
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
-                {getInitials(ranking[0]?.name || ranking[0]?.full_name || '')}
+                {getInitials(rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name || '')}
               </div>
               <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-3 text-center min-w-[100px] text-white">
-                <div className="text-sm font-semibold">{ranking[0]?.name || ranking[0]?.full_name || 'Participante'}</div>
-                <div className="text-lg font-bold">{ranking[0]?.total} pts</div>
+                <div className="text-sm font-semibold">{rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold">{rankingWithRanks[0]?.total} pts</div>
               </div>
             </div>
             
             {/* 3rd Place */}
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(ranking[2]?.name || ranking[2]?.full_name || '')}
+                {getInitials(rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name || '')}
               </div>
               <div className="bg-orange-100 rounded-lg p-3 text-center min-w-[80px]">
-                <div className="text-sm font-semibold text-orange-700">{ranking[2]?.name || ranking[2]?.full_name || 'Participante'}</div>
-                <div className="text-lg font-bold text-orange-900">{ranking[2]?.total} pts</div>
+                <div className="text-sm font-semibold text-orange-700">{rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name || 'Participante'}</div>
+                <div className="text-lg font-bold text-orange-900">{rankingWithRanks[2]?.total} pts</div>
               </div>
             </div>
           </div>
@@ -228,7 +253,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Participants List */}
       <div className="space-y-3">
-        {ranking.map((m, i) => (
+        {rankingWithRanks.map((m, i) => (
           <div
             key={m.id}
             className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group ${
@@ -252,7 +277,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
               {m.name || m.full_name || `Participante ${m.id}`}
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">
-                      {i + 1}º lugar
+                      {m.rank}º lugar
                     </p>
                   </div>
                   <div className="ml-2 flex-shrink-0">

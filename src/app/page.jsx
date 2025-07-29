@@ -8,6 +8,7 @@ import ChallengeBanner from "../components/ChallengeBanner";
 import MediaGallery from "../components/MediaGallery";
 import CommentsFeed from "../components/CommentsFeed";
 import QuickStats from "../components/QuickStats";
+import AdvancedStats from "../components/AdvancedStats";
 import SplashScreen from "../components/SplashScreen";
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!showSplash) return;
-    const timer = setTimeout(() => setShowSplash(false), 15000); // Reduzido para 15 segundos
+    const timer = setTimeout(() => setShowSplash(false), 15000); 
     return () => clearTimeout(timer);
   }, [showSplash]);
 
@@ -106,6 +107,18 @@ export default function Home() {
         checkins={checkins}
         challenge={challenge[0]}
         members={members}
+        teams={teams}
+      />
+      <AdvancedStats
+        members={members}
+        teams={teams}
+        checkins={checkins}
+        checkInActivities={checkInActivities}
+        media={media}
+        comments={comments}
+        reactions={reactions}
+        teamMemberships={teamMemberships}
+        challenge={challenge[0]}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities}/>
