@@ -98,7 +98,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
           <p className="text-gray-600 text-sm">Competição entre equipes</p>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
             {teamRanking.length} equipes
           </div>
         </div>

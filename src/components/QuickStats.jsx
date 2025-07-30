@@ -47,8 +47,11 @@ export default function QuickStats({ media = [], comments = [], reactions = [], 
         label: 'Taxa de Participação',
         icon: '📊',
         color: 'from-azul-600 to-verde-600',
-        description: 'Percentual de ativos',
+        description: 'Ativos vs Registrados',
         suffix: '%'
+        // NOTA: Este cálculo é diferente do AdvancedStats
+        // Aqui: (Ativos / Registrados no sistema) * 100
+        // AdvancedStats: (Ativos / Total esperado das equipes) * 100
       }
     ];
 

@@ -86,6 +86,13 @@ export default function AdvancedStats({
 
   // Função para calcular participação por equipe
   const getParticipacaoPorEquipe = () => {
+    const TAMANHO_EQUIPE = {
+      "Dados e Indicadores": 12,
+      "Pós Operação": 15,
+      "Estudos e Proteção": 21,
+      "Planejamento de Redes": 12,
+    };
+
     const equipesComParticipantes = teams.map(team => {
       const membrosDaEquipe = teamMemberships.filter(tm => String(tm.team_id) === String(team.id));
       const participantesAtivos = new Set();
@@ -97,11 +104,14 @@ export default function AdvancedStats({
         }
       });
 
+      const tamanhoEsperado = TAMANHO_EQUIPE[team.name?.trim()] || membrosDaEquipe.length;
+      const ativos = participantesAtivos.size;
+
       return {
         nome: team.name,
-        totalMembros: membrosDaEquipe.length,
-        ativos: participantesAtivos.size,
-        percentual: membrosDaEquipe.length > 0 ? ((participantesAtivos.size / membrosDaEquipe.length) * 100).toFixed(1) : 0
+        totalMembros: tamanhoEsperado,
+        ativos: ativos,
+        percentual: tamanhoEsperado > 0 ? ((ativos / tamanhoEsperado) * 100).toFixed(1) : 0
       };
     });
 
@@ -169,8 +179,24 @@ export default function AdvancedStats({
   const mediaPorParticipante = getMediaPorParticipante();
 
   // Calcula taxa de participação
+  const TAMANHO_EQUIPE = {
+    "Dados e Indicadores": 12,
+    "Pós Operação": 15,
+    "Estudos e Proteção": 21,
+    "Planejamento de Redes": 12,
+  };
+
+  // Calcula o tamanho total esperado de todas as equipes
+  const tamanhoTotalEsperado = teams.reduce((total, team) => {
+    const tamanhoEquipe = TAMANHO_EQUIPE[team.name?.trim()] || 0;
+    return total + tamanhoEquipe;
+  }, 0);
+
+  // Participantes ativos = pessoas que fizeram pelo menos 1 check-in (estão treinando)
   const participantesAtivos = new Set(checkins.map(c => String(c.account_id))).size;
-  const taxaParticipacao = members.length > 0 ? (participantesAtivos / members.length * 100).toFixed(1) : '0';
+  
+  // Taxa = (Pessoas treinando / Total esperado) * 100
+  const taxaParticipacao = tamanhoTotalEsperado > 0 ? ((participantesAtivos / tamanhoTotalEsperado) * 100).toFixed(1) : '0';
 
   return (
     <div className="bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl p-8 animate-fade-in relative overflow-hidden">
@@ -289,13 +315,16 @@ export default function AdvancedStats({
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Participação por Equipe</h3>
-              <p className="text-xs text-gray-500">Top 3 equipes com maior engajamento</p>
+              <p className="text-xs text-gray-500">Percentual de ativos por equipe</p>
             </div>
           </div>
-          <div className="space-y-3 max-h-32 overflow-y-auto">
-            {participacaoPorEquipe.slice(0, 3).map((equipe, index) => (
+          <div className="space-y-3 max-h-40 overflow-y-auto">
+            {participacaoPorEquipe.map((equipe, index) => (
               <div key={equipe.nome} className="flex justify-between items-center p-3 bg-gradient-to-r from-azul-600/10 to-transparent rounded-lg">
-                <span className="text-sm font-medium text-gray-700 truncate">{equipe.nome}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-gray-700 truncate block">{equipe.nome}</span>
+                  <span className="text-xs text-gray-500">{equipe.ativos}/{equipe.totalMembros} ativos</span>
+                </div>
                 <span className="font-bold text-verde-600 text-lg">{equipe.percentual}%</span>
               </div>
             ))}
@@ -316,11 +345,11 @@ export default function AdvancedStats({
           <div className="space-y-3">
             {topEngajados.map((participante, index) => (
               <div key={participante.id} className="flex justify-between items-center p-3 bg-gradient-to-r from-laranja-600/10 to-transparent rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <span className="text-xs text-gray-500 font-bold">#{index + 1}</span>
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <span className="text-xs text-gray-500 font-bold flex-shrink-0">#{index + 1}</span>
                   <span className="text-sm font-medium text-gray-700 truncate">{participante.nome}</span>
                 </div>
-                <span className="font-bold text-laranja-600 text-lg">{participante.total}</span>
+                <span className="font-bold text-laranja-600 text-lg flex-shrink-0 ml-2">{participante.total}</span>
               </div>
             ))}
           </div>
@@ -361,16 +390,16 @@ export default function AdvancedStats({
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Taxa de Participação</h3>
-              <p className="text-xs text-gray-500">Percentual de participantes ativos</p>
+              <p className="text-xs text-gray-500">Ativos treinando vs Total esperado</p>
             </div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-verde-600/10 to-transparent rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Participantes</span>
-              <span className="font-bold text-verde-600 text-lg">{members.length}</span>
+              <span className="text-sm font-medium text-gray-700">Total Esperado</span>
+              <span className="font-bold text-verde-600 text-lg">{tamanhoTotalEsperado}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-azul-600/10 to-transparent rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Ativos</span>
+              <span className="text-sm font-medium text-gray-700">Ativos Treinando</span>
               <span className="font-bold text-azul-600 text-lg">
                 {participantesAtivos}
               </span>
