@@ -160,35 +160,35 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
   };
 
   const RankingCard = ({ title, subtitle, icon, iconColor, ranking, valueKey, valueFormatter, unit, emptyMessage, onItemClick }) => (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className={`p-3 ${iconColor} rounded-xl shadow-sm`}>
+    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className={`p-2 sm:p-3 ${iconColor} rounded-xl shadow-sm`}>
             {icon}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-500">{subtitle}</p>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h3>
+            <p className="text-xs sm:text-sm text-gray-500">{subtitle}</p>
           </div>
         </div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {ranking.length > 0 ? (
           ranking.map((item, index) => (
             <div 
               key={item.memberId} 
-              className={`flex items-center space-x-4 p-4 rounded-xl transition-all duration-200 ${
+              className={`flex items-center space-x-2 sm:space-x-4 p-3 sm:p-4 rounded-xl transition-all duration-200 ${
                 onItemClick ? 'hover:bg-gray-50 hover:shadow-md cursor-pointer' : 'hover:bg-gray-50'
               }`}
               onClick={() => onItemClick && onItemClick(item)}
             >
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md ${getRankColor(index + 1)}`}>
+              <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md ${getRankColor(index + 1)}`}>
                 {getRankIcon(index + 1)}
               </div>
               
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-md">
+              <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-md">
                   {item.member.profile_picture_url ? (
                     <img 
                       src={item.member.profile_picture_url} 
@@ -196,27 +196,27 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm sm:text-lg">
                       {item.member.full_name?.charAt(0) || '?'}
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-gray-900 truncate">
+                  <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">
                     {item.member.full_name}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">
                     {valueFormatter ? valueFormatter(item[valueKey]) : item[valueKey]} {unit}
                   </p>
                 </div>
               </div>
               
-              <div className="text-right">
-                <div className="text-xl font-bold text-gray-900">
+              <div className="text-right flex-shrink-0">
+                <div className="text-lg sm:text-xl font-bold text-gray-900">
                   {valueFormatter ? valueFormatter(item[valueKey]) : item[valueKey]}
                 </div>
-                <div className="text-xs text-gray-500 font-medium">{unit}</div>
+                <div className="text-xs text-gray-500 font-medium hidden sm:block">{unit}</div>
               </div>
             </div>
           ))
