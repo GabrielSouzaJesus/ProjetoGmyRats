@@ -241,7 +241,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden border border-gray-100">
           {/* Header com gradiente */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-azul-600 to-verde-600 p-6 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-14 h-14 rounded-full overflow-hidden bg-white/20 backdrop-blur-sm flex-shrink-0 shadow-lg border-2 border-white/30">
@@ -252,7 +252,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-white/20 flex items-center justify-center text-white font-bold text-xl">
+                    <div className="w-full h-full bg-gradient-to-br from-azul-400 to-verde-500 flex items-center justify-center text-white font-bold text-xl">
                       {member?.full_name?.charAt(0) || '?'}
                     </div>
                   )}
@@ -261,9 +261,12 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
                   <h3 className="text-2xl font-bold text-white">
                     {member?.full_name}
                   </h3>
-                  <p className="text-purple-100 font-medium">
-                    {activities?.length || 0} tipos de atividades diferentes
-                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+                    <p className="text-white/90 font-medium">
+                      {activities?.length || 0} tipos de atividades diferentes
+                    </p>
+                  </div>
                 </div>
               </div>
               <button
@@ -280,21 +283,31 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
           {/* Conteúdo */}
           <div className="p-6 max-h-[60vh] overflow-y-auto">
             {activities && activities.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-gradient-to-r from-azul-600 to-verde-600 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-gray-600">
+                    {activities.length} atividades encontradas
+                  </span>
+                </div>
                 {activities.map((activity, index) => (
-                  <div key={index} className="group flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:from-purple-50 hover:to-blue-50 hover:border-purple-200 transition-all duration-300 hover:shadow-md">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div 
+                    key={index} 
+                    className="group flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:from-azul-50 hover:to-verde-50 hover:border-azul-200 transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-azul-500 to-verde-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                       <BoltIcon className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-lg font-semibold text-gray-900">
+                      <span className="text-lg font-semibold text-gray-900 group-hover:text-azul-700 transition-colors">
                         {translateActivity(activity)}
                       </span>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-gray-500 mt-1 group-hover:text-gray-600 transition-colors">
                         {activity}
                       </p>
                     </div>
-                    <div className="text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-azul-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -304,8 +317,8 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                  <BoltIcon className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-azul-100 to-verde-100 rounded-full flex items-center justify-center animate-pulse">
+                  <BoltIcon className="w-10 h-10 text-azul-400" />
                 </div>
                 <p className="text-lg font-medium text-gray-600">Nenhuma atividade registrada</p>
                 <p className="text-sm text-gray-400 mt-2">Este participante ainda não registrou atividades</p>
@@ -317,9 +330,14 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
           <div className="p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
             <button
               onClick={onClose}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 px-6 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              className="w-full bg-gradient-to-r from-azul-600 to-verde-600 text-white py-4 px-6 rounded-xl hover:from-azul-700 hover:to-verde-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
             >
-              Fechar
+              <div className="flex items-center justify-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>Fechar</span>
+              </div>
             </button>
           </div>
         </div>

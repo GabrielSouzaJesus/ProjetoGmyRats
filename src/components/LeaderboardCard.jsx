@@ -35,7 +35,24 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
         durationMinutes = activities.reduce((sum, a) => sum + (Number(a.duration_millis) || 0), 0) / 1000 / 60;
       }
 
-      // Verifica se é coletivo
+      // Verifica se é coletivo especial com pontuação distribuída
+      const coletivoMatch = (checkin.description || checkin.notes || checkin.hashtag || checkin.tags || "").match(/#coletivo_([^_]+)_([^_]+)_(\d+)pts/);
+      
+      if (coletivoMatch && durationMinutes >= 40) {
+        const [, equipe1, equipe2, pontosTotal] = coletivoMatch;
+        const pontos = parseInt(pontosTotal);
+        
+        // Calcula distribuição: 80% para equipe principal, 20% para secundária
+        const pontosEquipe1 = Math.round(pontos * 0.8);
+        const pontosEquipe2 = Math.round(pontos * 0.2);
+        
+        // Aqui você pode implementar a lógica para distribuir pontos entre equipes
+        // Por enquanto, vamos manter a lógica individual
+        diaTemColetivo = true;
+        break;
+      }
+      
+      // Verifica se é coletivo normal
       const isColetivo = (checkin.description && checkin.description.includes("#coletivo")) ||
                          (checkin.notes && checkin.notes.includes("#coletivo")) ||
                          (checkin.hashtag && checkin.hashtag.includes("#coletivo")) ||
@@ -68,7 +85,7 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export default function LeaderboardCard({ members = [], checkins = [], checkInActivities = [] }) {
+export default function LeaderboardCard({ members = [], checkins = [], checkInActivities = [], coletivos = [] }) {
   const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [showAllParticipants, setShowAllParticipants] = useState(false);
@@ -94,10 +111,34 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     return total;
   }
 
+  function getColetivoScore(memberId, coletivos) {
+    let total = 0;
+    
+    coletivos.forEach(coletivo => {
+      // Verificar se o membro participou do treino coletivo
+      const isInTeam1 = coletivo.team1_participants.some(p => String(p.id) === String(memberId));
+      const isInTeam2 = coletivo.team2_participants.some(p => String(p.id) === String(memberId));
+      
+      if (isInTeam1) {
+        // Distribuir pontos da equipe 1 entre os participantes
+        const pontosPorParticipante = Math.round(coletivo.team1_points / coletivo.team1_participants.length);
+        total += pontosPorParticipante;
+      } else if (isInTeam2) {
+        // Distribuir pontos da equipe 2 entre os participantes
+        const pontosPorParticipante = Math.round(coletivo.team2_points / coletivo.team2_participants.length);
+        total += pontosPorParticipante;
+      }
+    });
+    
+    return total;
+  }
+
   const allRanking = members
     .map(m => ({
       ...m,
-      total: getMemberScoreWithRules(m.id, checkins, checkInActivities)
+      individualScore: getMemberScoreWithRules(m.id, checkins, checkInActivities),
+      coletivoScore: getColetivoScore(m.id, coletivos),
+      total: getMemberScoreWithRules(m.id, checkins, checkInActivities) + getColetivoScore(m.id, coletivos)
     }))
     .filter(m => m.total > 0)
     .filter(m => !search || (m.name || m.full_name || "").toLowerCase().includes(search.toLowerCase()))

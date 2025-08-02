@@ -11,6 +11,8 @@ import QuickStats from "../components/QuickStats";
 import AdvancedStats from "../components/AdvancedStats";
 import SplashScreen from "../components/SplashScreen";
 import RankingCards from "../components/RankingCards";
+import ColetivoModal from "../components/ColetivoModal";
+import { UsersIcon } from "@heroicons/react/24/solid";
 
 export default function Home() {
   const [members, setMembers] = useState([]);
@@ -25,6 +27,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
   const [showSplash, setShowSplash] = useState(true);
+  const [showColetivoModal, setShowColetivoModal] = useState(false);
+  const [coletivos, setColetivos] = useState([]);
 
   useEffect(() => {
     if (!showSplash) return;
@@ -35,7 +39,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, t, c, a, tm, med, com, reac, chal] = await Promise.all([
+      const [m, t, c, a, tm, med, com, reac, chal, col] = await Promise.all([
         fetch("/api/members").then(res => res.json()),
         fetch("/api/teams").then(res => res.json()),
         fetch("/api/checkins").then(res => res.json()),
@@ -45,6 +49,7 @@ export default function Home() {
         fetch("/api/comments").then(res => res.json()),
         fetch("/api/reactions").then(res => res.json()),
         fetch("/api/challenge").then(res => res.json()),
+        fetch("/api/coletivos").then(res => res.json()),
       ]);
       setMembers(m);
       setTeams(t);
@@ -55,6 +60,7 @@ export default function Home() {
       setComments(com);
       setReactions(reac);
       setChallenge(chal);
+      setColetivos(col);
       
       // Lê diretamente o arquivo last_update.csv
       try {
@@ -122,14 +128,36 @@ export default function Home() {
         challenge={challenge[0]}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities}/>
+        <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities} coletivos={coletivos}/>
         <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
+      </div>
+      
+      {/* Botão para Treino Coletivo */}
+      <div className="mt-6 flex justify-center relative z-10">
+        <button
+          onClick={() => setShowColetivoModal(true)}
+          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+        >
+          <div className="flex items-center space-x-3">
+            <UsersIcon className="h-6 w-6" />
+            <span>Registrar Treino Coletivo</span>
+          </div>
+        </button>
       </div>
       
       {/* Novos Cards de Ranking */}
       <div className="mt-6">
         <RankingCards members={members} checkins={checkins} checkInActivities={checkInActivities} />
       </div>
+      
+      {/* Modal de Treino Coletivo */}
+      <ColetivoModal
+        isOpen={showColetivoModal}
+        onClose={() => setShowColetivoModal(false)}
+        teams={teams}
+        members={members}
+        teamMemberships={teamMemberships}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <MediaGallery 

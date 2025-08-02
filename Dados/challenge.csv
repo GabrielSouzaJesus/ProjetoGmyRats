@@ -1,4 +1,4 @@
-id,name,description,start_date,end_date,score_by,photo_url
+id,name,description,start_date,end_date,photo_url,score_by
 1851597,Energia Total - Alto Desempenho ,"🏆 DESAFIO ENERGIA TOTAL - 60 DIAS 🏋️‍♀️🔥
 
 📅 Período: 17 de julho a 14 de Setembro 
@@ -11,4 +11,4 @@ id,name,description,start_date,end_date,score_by,photo_url
 📸 Registre seu treino com foto e duração correta.
 🏷️ Use a tag #coletivo para treinos em grupo!
 
-👥 Ranking individual e por grupo!",2025-07-17T00:00:00.000000Z,2025-09-14T00:00:00.000000Z,points,https://cdn.gymrats.app/a9cb7f40-ba92-4a25-adcc-94d2768fdb2e.jpg
+👥 Ranking individual e por grupo!",2025-07-17T00:00:00.000000Z,2025-09-14T00:00:00.000000Z,https://cdn.gymrats.app/a9cb7f40-ba92-4a25-adcc-94d2768fdb2e.jpg,points
