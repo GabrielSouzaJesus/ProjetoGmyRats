@@ -10,6 +10,7 @@ import CommentsFeed from "../components/CommentsFeed";
 import QuickStats from "../components/QuickStats";
 import AdvancedStats from "../components/AdvancedStats";
 import SplashScreen from "../components/SplashScreen";
+import RankingCards from "../components/RankingCards";
 
 export default function Home() {
   const [members, setMembers] = useState([]);
@@ -66,7 +67,7 @@ export default function Home() {
       }
       
       setLoading(false);
-    }
+    } 
     fetchData();
 
     // Atualização automática dos comentários e fotos/vídeos recentes
@@ -124,6 +125,12 @@ export default function Home() {
         <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities}/>
         <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
       </div>
+      
+      {/* Novos Cards de Ranking */}
+      <div className="mt-6">
+        <RankingCards members={members} checkins={checkins} checkInActivities={checkInActivities} />
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <MediaGallery 
           media={media} 

@@ -217,8 +217,18 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
           <div className="flex items-end justify-center space-x-2 mb-4">
             {/* 2nd Place */}
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name || '')}
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mb-2 shadow-lg">
+                {rankingWithRanks[1]?.profile_picture_url ? (
+                  <img 
+                    src={rankingWithRanks[1].profile_picture_url} 
+                    alt={rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-bold text-lg">
+                    {getInitials(rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name || '')}
+                  </div>
+                )}
               </div>
               <div className="bg-gray-100 rounded-lg p-3 text-center min-w-[80px]">
                 <div className="text-sm font-semibold text-gray-700">{rankingWithRanks[1]?.name || rankingWithRanks[1]?.full_name || 'Participante'}</div>
@@ -228,8 +238,18 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             
             {/* 1st Place */}
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">
-                {getInitials(rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name || '')}
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mb-2 shadow-lg">
+                {rankingWithRanks[0]?.profile_picture_url ? (
+                  <img 
+                    src={rankingWithRanks[0].profile_picture_url} 
+                    alt={rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-600 flex items-center justify-center text-white font-bold text-xl">
+                    {getInitials(rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name || '')}
+                  </div>
+                )}
               </div>
               <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-3 text-center min-w-[100px] text-white">
                 <div className="text-sm font-semibold">{rankingWithRanks[0]?.name || rankingWithRanks[0]?.full_name || 'Participante'}</div>
@@ -239,8 +259,18 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             
             {/* 3rd Place */}
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name || '')}
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mb-2 shadow-lg">
+                {rankingWithRanks[2]?.profile_picture_url ? (
+                  <img 
+                    src={rankingWithRanks[2].profile_picture_url} 
+                    alt={rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center text-white font-bold text-lg">
+                    {getInitials(rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name || '')}
+                  </div>
+                )}
               </div>
               <div className="bg-orange-100 rounded-lg p-3 text-center min-w-[80px]">
                 <div className="text-sm font-semibold text-orange-700">{rankingWithRanks[2]?.name || rankingWithRanks[2]?.full_name || 'Participante'}</div>
@@ -263,14 +293,29 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-lg flex-shrink-0 ${
-                  i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                  i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
-                  i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
-                  'bg-gradient-to-r from-azul-600 to-verde-600'
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-lg ${
+                  i === 0 ? 'ring-2 ring-yellow-500' :
+                  i === 1 ? 'ring-2 ring-gray-400' :
+                  i === 2 ? 'ring-2 ring-orange-600' :
+                  ''
                 }`}>
-                  {i < 3 ? ['🥇', '🥈', '🥉'][i] : getInitials(m.name || m.full_name || `P${m.id}`)}
-            </div>
+                  {m.profile_picture_url ? (
+                    <img 
+                      src={m.profile_picture_url} 
+                      alt={m.name || m.full_name || `Participante ${m.id}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm sm:text-lg ${
+                      i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                      i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                      i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                      'bg-gradient-to-r from-azul-600 to-verde-600'
+                    }`}>
+                      {i < 3 ? ['🥇', '🥈', '🥉'][i] : getInitials(m.name || m.full_name || `P${m.id}`)}
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0 flex items-center">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base" title={m.name || m.full_name || `Participante ${m.id}`}>
