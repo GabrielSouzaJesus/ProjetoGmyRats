@@ -558,7 +558,7 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
               >
                 Cancelar
               </button>
-              <button
+              {/* <button
                 type="submit"
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl hover:from-azul-700 hover:to-verde-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -576,7 +576,7 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
                     <span>Registrar Treino Coletivo</span>
                   </div>
                 )}
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
