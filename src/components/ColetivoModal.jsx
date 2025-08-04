@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { UsersIcon, TrophyIcon, FireIcon } from '@heroicons/react/24/solid';
+import { UsersIcon, TrophyIcon, FireIcon, CheckIcon } from '@heroicons/react/24/solid';
 
 const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMemberships = [] }) => {
+  console.log('ColetivoModal renderizado, isOpen:', isOpen);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -32,73 +34,101 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (e) => {
+    console.log('=== handleSubmit chamado ===');
     e.preventDefault();
+    console.log('Iniciando envio do formulário...');
+    console.log('FormData:', formData);
     
     // Validações completas
     if (!formData.title.trim()) {
+      console.log('Erro: Título vazio');
       alert('Por favor, preencha o título do treino.');
       return;
     }
     
     if (!formData.team1 || !formData.team2) {
+      console.log('Erro: Equipes não selecionadas');
       alert('Por favor, selecione as duas equipes participantes.');
       return;
     }
     
     if (formData.team1 === formData.team2) {
+      console.log('Erro: Equipes iguais');
       alert('As equipes devem ser diferentes.');
       return;
     }
     
     if (formData.team1Participants.length + formData.team2Participants.length < 2) {
+      console.log('Erro: Menos de 2 participantes');
       alert('É necessário pelo menos 2 participantes para registrar um treino coletivo.');
       return;
     }
     
     if (!formData.photoFile) {
+      console.log('Erro: Foto não selecionada');
       alert('Por favor, selecione uma foto do treino coletivo.');
       return;
     }
     
+    console.log('Todas as validações passaram, iniciando envio...');
     setIsSubmitting(true);
     
         try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('total_points', formData.totalPoints);
-      formDataToSend.append('duration', formData.duration);
-      formDataToSend.append('team1', formData.team1);
-      formDataToSend.append('team2', formData.team2);
-      formDataToSend.append('team1_participants', JSON.stringify(formData.team1Participants));
-      formDataToSend.append('team2_participants', JSON.stringify(formData.team2Participants));
-      
-      if (formData.photoFile) {
-        formDataToSend.append('photo', formData.photoFile);
-      }
+          console.log('Criando FormData...');
+          const formDataToSend = new FormData();
+          formDataToSend.append('title', formData.title);
+          formDataToSend.append('description', formData.description);
+          formDataToSend.append('total_points', formData.totalPoints);
+          formDataToSend.append('duration', formData.duration);
+          formDataToSend.append('team1', formData.team1);
+          formDataToSend.append('team2', formData.team2);
+          formDataToSend.append('team1_participants', JSON.stringify(formData.team1Participants));
+          formDataToSend.append('team2_participants', JSON.stringify(formData.team2Participants));
+          
+          if (formData.photoFile) {
+            formDataToSend.append('photo', formData.photoFile);
+          }
 
-      const response = await fetch('/api/coletivos', {
-        method: 'POST',
-        body: formDataToSend,
-      });
+          console.log('Enviando requisição para /api/coletivos...');
+          const response = await fetch('/api/coletivos', {
+            method: 'POST',
+            body: formDataToSend,
+          });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Treino coletivo salvo:', result);
-        alert('Treino coletivo registrado com sucesso!');
-        onClose();
-      } else {
-        const error = await response.json();
-        alert(`Erro ao salvar: ${error.error}`);
-      }
-    } catch (error) {
-      console.error('Erro ao salvar treino coletivo:', error);
-      alert('Erro ao salvar treino coletivo. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
+          console.log('Resposta recebida:', response.status, response.statusText);
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Treino coletivo salvo:', result);
+            
+            // Mostrar modal de sucesso
+            setShowSuccessModal(true);
+            setFormData({
+              title: '',
+              description: '',
+              totalPoints: 30,
+              duration: 60,
+              photoFile: null,
+              photoPreview: '',
+              team1: '',
+              team2: '',
+              team1Participants: [],
+              team2Participants: []
+            });
+          } else {
+            const error = await response.json();
+            console.error('Erro na resposta:', error);
+            alert(`Erro ao salvar: ${error.error}`);
+          }
+        } catch (error) {
+          console.error('Erro ao salvar treino coletivo:', error);
+          alert('Erro ao salvar treino coletivo. Tente novamente.');
+        } finally {
+          setIsSubmitting(false);
+        }
   };
 
   const addParticipant = (memberId, team) => {
@@ -194,7 +224,8 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto" id="coletivo-form">
+          {console.log('Formulário renderizado')}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Informações Básicas */}
                           <div className="space-y-6">
@@ -558,9 +589,13 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
               >
                 Cancelar
               </button>
-              {/* <button
-                type="submit"
+              <button
+                type="button"
                 disabled={isSubmitting}
+                onClick={() => {
+                  console.log('Botão clicado!');
+                  handleSubmit({ preventDefault: () => {} });
+                }}
                 className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl hover:from-azul-700 hover:to-verde-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {isSubmitting ? (
@@ -576,11 +611,39 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
                     <span>Registrar Treino Coletivo</span>
                   </div>
                 )}
-              </button> */}
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckIcon className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Treino Coletivo Registrado!
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Seu treino coletivo foi enviado para aprovação. O administrador irá revisar e aprovar em breve.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  onClose();
+                }}
+                className="flex-1 bg-gradient-to-r from-azul-600 to-verde-600 text-white py-3 px-6 rounded-xl hover:from-azul-700 hover:to-verde-700 transition-all duration-300 font-bold"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

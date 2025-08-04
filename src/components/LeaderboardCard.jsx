@@ -114,7 +114,16 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   function getColetivoScore(memberId, coletivos) {
     let total = 0;
     
-    coletivos.forEach(coletivo => {
+    // Verificar se coletivos é um array
+    if (!Array.isArray(coletivos)) {
+      console.log('coletivos não é um array:', coletivos);
+      return 0;
+    }
+    
+    // Filtrar apenas treinos coletivos aprovados
+    const approvedColetivos = coletivos.filter(coletivo => coletivo.status === 'approved');
+    
+    approvedColetivos.forEach(coletivo => {
       // Verificar se o membro participou do treino coletivo
       const isInTeam1 = coletivo.team1_participants.some(p => String(p.id) === String(memberId));
       const isInTeam2 = coletivo.team2_participants.some(p => String(p.id) === String(memberId));

@@ -12,9 +12,13 @@ import AdvancedStats from "../components/AdvancedStats";
 import SplashScreen from "../components/SplashScreen";
 import RankingCards from "../components/RankingCards";
 import ColetivoModal from "../components/ColetivoModal";
-import { UsersIcon } from "@heroicons/react/24/solid";
+import AdminApprovalModal from "../components/AdminApprovalModal";
+import AuthModal from "../components/AuthModal";
+import { useAuth } from "../hooks/useAuth";
+import { UsersIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 
 export default function Home() {
+  const { isAuthenticated, login } = useAuth();
   const [members, setMembers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [checkins, setCheckins] = useState([]);
@@ -28,6 +32,8 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState('');
   const [showSplash, setShowSplash] = useState(true);
   const [showColetivoModal, setShowColetivoModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [coletivos, setColetivos] = useState([]);
 
   useEffect(() => {
@@ -49,7 +55,12 @@ export default function Home() {
         fetch("/api/comments").then(res => res.json()),
         fetch("/api/reactions").then(res => res.json()),
         fetch("/api/challenge").then(res => res.json()),
-        fetch("/api/coletivos").then(res => res.json()),
+        fetch("/api/coletivos").then(async res => {
+          console.log('API coletivos - status:', res.status);
+          const data = await res.json();
+          console.log('API coletivos - dados:', data);
+          return data;
+        }),
       ]);
       setMembers(m);
       setTeams(t);
@@ -60,6 +71,7 @@ export default function Home() {
       setComments(com);
       setReactions(reac);
       setChallenge(chal);
+      console.log('Página principal - coletivos carregados:', col);
       setColetivos(col);
       
       // Lê diretamente o arquivo last_update.csv
@@ -77,16 +89,16 @@ export default function Home() {
     fetchData();
 
     // Atualização automática dos comentários e fotos/vídeos recentes
-    const interval = setInterval(async () => {
-      const [med, com] = await Promise.all([
-        fetch("/api/check_in_media").then(res => res.json()),
-        fetch("/api/comments").then(res => res.json()),
-      ]);
-      setMedia(med);
-      setComments(com);
-    }, 30000); // 30 segundos
+    // const interval = setInterval(async () => {
+    //   const [med, com] = await Promise.all([
+    //     fetch("/api/check_in_media").then(res => res.json()),
+    //     fetch("/api/comments").then(res => res.json()),
+    //   ]);
+    //   setMedia(med);
+    //   setComments(com);
+    // }, 30000); // 30 segundos
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, []);
 
   if (showSplash) {
@@ -132,15 +144,37 @@ export default function Home() {
         <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
       </div>
       
-      {/* Botão para Treino Coletivo */}
-      <div className="mt-6 flex justify-center relative z-10">
+      {/* Botões de Ação */}
+      <div className="mt-6 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 relative z-10">
         <button
           onClick={() => setShowColetivoModal(true)}
-          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+          className="px-8 py-4 bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl hover:from-azul-700 hover:to-verde-700 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
         >
           <div className="flex items-center space-x-3">
             <UsersIcon className="h-6 w-6" />
             <span>Registrar Treino Coletivo</span>
+          </div>
+        </button>
+        
+        <button
+          onClick={() => {
+            if (isAuthenticated) {
+              setShowAdminModal(true);
+            } else {
+              setShowAuthModal(true);
+            }
+          }}
+          className={`px-8 py-4 text-white rounded-xl transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
+            isAuthenticated 
+              ? 'bg-gradient-to-r from-green-600 to-verde-600 hover:from-green-700 hover:to-verde-700' 
+              : 'bg-gradient-to-r from-laranja-600 to-azul-600 hover:from-laranja-700 hover:to-azul-700'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <ShieldCheckIcon className="h-6 w-6" />
+            <span>
+              {isAuthenticated ? '✅ Aprovar Treinos Coletivos' : '🔒 Acesso Admin'}
+            </span>
           </div>
         </button>
       </div>
@@ -157,6 +191,21 @@ export default function Home() {
         teams={teams}
         members={members}
         teamMemberships={teamMemberships}
+      />
+
+      {/* Modal de Aprovação Admin */}
+      <AdminApprovalModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
+        coletivos={coletivos}
+        members={members}
+      />
+
+      {/* Modal de Autenticação */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={login}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
