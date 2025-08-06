@@ -59,19 +59,36 @@ export default async function handler(req, res) {
       
       const lines = data.split('\n').slice(1); // Remove header
       console.log('Linhas encontradas:', lines.length);
-      console.log('Linhas:', lines);
       
       const coletivos = lines
         .filter(line => line.trim())
         .map(line => {
           console.log('Processando linha:', line);
           try {
-            const fields = line.split(',');
-            console.log('Campos encontrados:', fields.length);
+            // Parse CSV mais robusto - considerar campos com vírgulas dentro de aspas
+            const fields = [];
+            let currentField = '';
+            let insideQuotes = false;
             
-            // Verificar se o header está correto baseado no número de campos
-            if (fields.length < 15) {
-              console.log('Linha com campos insuficientes, pulando...');
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i];
+              
+              if (char === '"') {
+                insideQuotes = !insideQuotes;
+              } else if (char === ',' && !insideQuotes) {
+                fields.push(currentField.trim());
+                currentField = '';
+              } else {
+                currentField += char;
+              }
+            }
+            fields.push(currentField.trim()); // Último campo
+            
+            console.log('Campos parseados:', fields.length);
+            console.log('Campos:', fields);
+            
+            if (fields.length < 17) {
+              console.log('Campos insuficientes, pulando linha');
               return null;
             }
             
@@ -81,8 +98,7 @@ export default async function handler(req, res) {
               created_at, hashtag, status, approved_by, approved_at
             ] = fields;
             
-            console.log('Parsing participantes team1:', team1_participants);
-            console.log('Parsing participantes team2:', team2_participants);
+
             
             let team1Participants = [];
             let team2Participants = [];
@@ -91,24 +107,40 @@ export default async function handler(req, res) {
               if (team1_participants && team1_participants.trim()) {
                 // Remover aspas extras se existirem
                 const cleanTeam1 = team1_participants.replace(/^"|"$/g, '');
-                team1Participants = JSON.parse(cleanTeam1);
-                console.log('Team1 participantes parseados:', team1Participants);
+                console.log('Team1 após remover aspas:', cleanTeam1);
+                
+                if (cleanTeam1 && cleanTeam1 !== '[]') {
+                  const participants = cleanTeam1.split('|');
+                  team1Participants = participants.map(p => {
+                    const [id, name] = p.split(':');
+                    return { id, name };
+                  });
+                  console.log('✅ Team1 parseado com sucesso:', team1Participants);
+                }
               }
             } catch (error) {
               console.error('Erro ao parsear team1_participants:', error);
-              console.error('Dados originais:', team1_participants);
+              team1Participants = [];
             }
             
             try {
               if (team2_participants && team2_participants.trim()) {
                 // Remover aspas extras se existirem
                 const cleanTeam2 = team2_participants.replace(/^"|"$/g, '');
-                team2Participants = JSON.parse(cleanTeam2);
-                console.log('Team2 participantes parseados:', team2Participants);
+                console.log('Team2 após remover aspas:', cleanTeam2);
+                
+                if (cleanTeam2 && cleanTeam2 !== '[]') {
+                  const participants = cleanTeam2.split('|');
+                  team2Participants = participants.map(p => {
+                    const [id, name] = p.split(':');
+                    return { id, name };
+                  });
+                  console.log('✅ Team2 parseado com sucesso:', team2Participants);
+                }
               }
             } catch (error) {
               console.error('Erro ao parsear team2_participants:', error);
-              console.error('Dados originais:', team2_participants);
+              team2Participants = [];
             }
             
             // Limpar e validar a data
@@ -137,6 +169,10 @@ export default async function handler(req, res) {
               approved_at: approved_at || ''
             };
             
+            console.log('Status final:', coletivo.status);
+            console.log('Approved_by:', coletivo.approved_by);
+            console.log('Approved_at:', coletivo.approved_at);
+            
             console.log('Coletivo processado:', coletivo);
             return coletivo;
           } catch (error) {
@@ -148,6 +184,18 @@ export default async function handler(req, res) {
       
       console.log('Coletivos processados:', coletivos);
       console.log('Retornando', coletivos.length, 'coletivos');
+      
+      // Log detalhado de cada coletivo
+      coletivos.forEach((coletivo, index) => {
+        console.log(`Coletivo ${index + 1}:`, {
+          id: coletivo.id,
+          title: coletivo.title,
+          status: coletivo.status,
+          team1_participants_count: coletivo.team1_participants?.length || 0,
+          team2_participants_count: coletivo.team2_participants?.length || 0
+        });
+      });
+      
       res.status(200).json(coletivos);
     } catch (error) {
       console.error('Erro ao ler coletivos:', error);
@@ -254,6 +302,34 @@ export default async function handler(req, res) {
       const hashtag = `#coletivo_${team1Value.toLowerCase().replace(/\s+/g, '_')}_${team2Value.toLowerCase().replace(/\s+/g, '_')}_${totalPointsValue}pts`;
 
       console.log('Criando linha CSV...');
+      
+      // Converter participantes de string JSON para array se necessário
+      let team1ParticipantsArray = team1ParticipantsValue;
+      let team2ParticipantsArray = team2ParticipantsValue;
+      
+      // Se for string JSON, fazer parse
+      if (typeof team1ParticipantsValue === 'string') {
+        try {
+          team1ParticipantsArray = JSON.parse(team1ParticipantsValue);
+        } catch (error) {
+          console.error('Erro ao parsear team1_participants:', error);
+          team1ParticipantsArray = [];
+        }
+      }
+      
+      if (typeof team2ParticipantsValue === 'string') {
+        try {
+          team2ParticipantsArray = JSON.parse(team2ParticipantsValue);
+        } catch (error) {
+          console.error('Erro ao parsear team2_participants:', error);
+          team2ParticipantsArray = [];
+        }
+      }
+      
+      // Garantir que são arrays
+      if (!Array.isArray(team1ParticipantsArray)) team1ParticipantsArray = [];
+      if (!Array.isArray(team2ParticipantsArray)) team2ParticipantsArray = [];
+      
       // Criar linha CSV
       const newColetivo = [
         id,
@@ -266,8 +342,8 @@ export default async function handler(req, res) {
         team2Value,
         team1_points,
         team2_points,
-        JSON.stringify(team1ParticipantsValue || []),
-        JSON.stringify(team2ParticipantsValue || []),
+        team1ParticipantsArray.map(p => `${p.id}:${p.name}`).join('|'),
+        team2ParticipantsArray.map(p => `${p.id}:${p.name}`).join('|'),
         new Date().toISOString(),
         hashtag,
         'pending', // status inicial

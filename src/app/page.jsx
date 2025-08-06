@@ -72,6 +72,8 @@ export default function Home() {
       setReactions(reac);
       setChallenge(chal);
       console.log('Página principal - coletivos carregados:', col);
+      console.log('Página principal - coletivos é array?', Array.isArray(col));
+      console.log('Página principal - coletivos length:', col?.length);
       setColetivos(col);
       
       // Lê diretamente o arquivo last_update.csv

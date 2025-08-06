@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { corrigirFusoHorario } from "../lib/utils";
+import ActivityModal from './ActivityModal';
 
 function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
+  // IMPORTANTE: Nova regra de pontuação (2025)
+  // - Treino individual: 1 ponto
+  // - Treino coletivo (#coletivo): 1 ponto (não mais 3 pontos)
+  // - Treinos coletivos aprovados: pontos vão para ranking de equipes, não individual
+  
   // 1. Filtra todos os check-ins do membro
   const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
 
@@ -66,9 +72,9 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
       }
     }
 
-    // Prioriza coletivo
+    // Nova regra: coletivo conta apenas 1 ponto no ranking individual
     if (diaTemColetivo) {
-      total += 3;
+      total += 1; // Mudança: coletivo agora conta apenas 1 ponto no individual
     } else if (diaTemIndividual) {
       total += 1;
     }
@@ -89,6 +95,10 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [showAllParticipants, setShowAllParticipants] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [selectedMemberForActivity, setSelectedMemberForActivity] = useState(null);
+  const [selectedDateForActivity, setSelectedDateForActivity] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Loga os dados recebidos
   console.log("LeaderboardCard - members:", members);
@@ -181,6 +191,24 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
   const rankingWithRanks = calculateRanking(ranking);
 
+  // Função para verificar se há empates nos 3 primeiros lugares
+  function hasTiesInTop3() {
+    if (rankingWithRanks.length < 3) return true;
+    
+    const top3 = rankingWithRanks.slice(0, 3);
+    const firstScore = top3[0].total;
+    const secondScore = top3[1].total;
+    const thirdScore = top3[2].total;
+    
+    // Se os 3 primeiros têm a mesma pontuação, há empate
+    if (firstScore === secondScore && secondScore === thirdScore) return true;
+    
+    // Se pelo menos 2 dos 3 primeiros têm a mesma pontuação, há empate
+    if (firstScore === secondScore || secondScore === thirdScore || firstScore === thirdScore) return true;
+    
+    return false;
+  }
+
   function getCheckinsByDay(memberId) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const byDay = {};
@@ -195,8 +223,16 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     return Object.entries(byDay).map(([date, dayCheckins]) => {
       let diaTemColetivo = false;
       let diaTemIndividual = false;
+      let temAtividadesRegistradas = false;
+      
       for (const checkin of dayCheckins) {
         const activities = checkInActivities.filter(a => String(a.workout_id) === String(checkin.id));
+        
+        // Verificar se há atividades registradas
+        if (activities.length > 0) {
+          temAtividadesRegistradas = true;
+        }
+        
         let durationMinutes = 0;
         if (checkin.duration) {
           durationMinutes = Number(checkin.duration);
@@ -217,9 +253,9 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
         }
       }
       let pontos = 0;
-      if (diaTemColetivo) pontos = 3;
+      if (diaTemColetivo) pontos = 1; // Mudança: coletivo agora conta apenas 1 ponto no individual
       else if (diaTemIndividual) pontos = 1;
-      return { date, pontos, checkins: dayCheckins };
+      return { date, pontos, checkins: dayCheckins, temAtividadesRegistradas };
     }).sort((a, b) => a.date.localeCompare(b.date));
   }
 
@@ -262,7 +298,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       </div>
 
       {/* Top 3 Podium */}
-      {rankingWithRanks.length >= 3 && !search && !showAllParticipants && (
+      {rankingWithRanks.length >= 3 && !search && !showAllParticipants && !hasTiesInTop3() && (
         <div className="mb-6">
           <div className="flex items-end justify-center space-x-2 mb-4">
             {/* 2nd Place */}
@@ -331,13 +367,28 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
         </div>
       )}
 
+      {/* Mensagem quando há empates */}
+      {rankingWithRanks.length >= 3 && !search && !showAllParticipants && hasTiesInTop3() && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-xl">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-azul-500 to-verde-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm">🏆</span>
+            </div>
+            <div className="text-center">
+              <p className="text-azul-800 font-semibold">Pódio em formação</p>
+              <p className="text-azul-600 text-sm">Aguardando desempate entre os primeiros colocados</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Participants List */}
       <div className="space-y-3">
         {rankingWithRanks.map((m, i) => (
           <div
             key={m.id}
             className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group ${
-              i < 3 && !search && !showAllParticipants ? 'hidden' : ''
+              i < 3 && !search && !showAllParticipants && !hasTiesInTop3() ? 'hidden' : ''
             }`}
             onClick={() => setSelectedMember(m)}
           >
@@ -375,7 +426,21 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                       {m.rank}º lugar
                     </p>
                   </div>
-                  <div className="ml-2 flex-shrink-0">
+                  <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                    {/* Botão de cadastrar atividade */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMemberForActivity(m);
+                        setShowActivityModal(true);
+                      }}
+                      className="p-2 bg-gradient-to-r from-azul-500 to-verde-500 text-white rounded-lg hover:from-azul-600 hover:to-verde-600 transition-all"
+                      title="Cadastrar atividade manual"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </button>
                     <div className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm whitespace-nowrap ${
                       m.total >= 15 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
                       m.total >= 10 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
@@ -497,6 +562,36 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                           </div>
                         </div>
                       ))}
+                      
+                      {/* Botão para cadastrar atividade se não há atividades registradas */}
+                      {/* TESTE: Mostrar sempre para debug */}
+                      {true && (
+                        <div className="bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-8 h-8 bg-gradient-to-r from-azul-500 to-verde-500 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-700">Nenhuma atividade registrada</p>
+                                <p className="text-xs text-gray-500">Cadastre a atividade realizada neste dia</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedMemberForActivity(selectedMember);
+                                setSelectedDateForActivity(formatDateBR(dia.date));
+                                setShowActivityModal(true);
+                              }}
+                              className="px-3 py-1 bg-gradient-to-r from-azul-500 to-verde-500 text-white text-xs rounded-lg hover:from-azul-600 hover:to-verde-600 transition-all font-medium"
+                            >
+                              Cadastrar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -504,6 +599,27 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             </div>
           </div>
         </div>
+      )}
+
+      {/* Activity Modal */}
+      {showActivityModal && selectedMemberForActivity && (
+        <ActivityModal
+          isOpen={showActivityModal}
+          onClose={() => {
+            setShowActivityModal(false);
+            setSelectedMemberForActivity(null);
+            setSelectedDateForActivity(null);
+          }}
+          onSave={() => {
+            // Recarregar dados após cadastrar atividade
+            setRefreshKey(prev => prev + 1);
+            setShowActivityModal(false);
+            setSelectedMemberForActivity(null);
+            setSelectedDateForActivity(null);
+          }}
+          member={selectedMemberForActivity}
+          selectedDate={selectedDateForActivity}
+        />
       )}
     </div>
   );

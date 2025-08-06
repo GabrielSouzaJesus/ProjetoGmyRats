@@ -10,9 +10,12 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
   console.log('AdminApprovalModal - coletivos recebidos:', coletivos);
   console.log('AdminApprovalModal - coletivos é array?', Array.isArray(coletivos));
 
-  const pendingColetivos = Array.isArray(coletivos) ? coletivos.filter(c => c.status === 'pending') : [];
-  const approvedColetivos = Array.isArray(coletivos) ? coletivos.filter(c => c.status === 'approved') : [];
-  const rejectedColetivos = Array.isArray(coletivos) ? coletivos.filter(c => c.status === 'rejected') : [];
+  // Garantir que coletivos é um array e processar corretamente
+  const coletivosArray = Array.isArray(coletivos) ? coletivos : [];
+  
+  const pendingColetivos = coletivosArray.filter(c => c.status === 'pending');
+  const approvedColetivos = coletivosArray.filter(c => c.status === 'approved');
+  const rejectedColetivos = coletivosArray.filter(c => c.status === 'rejected');
 
   console.log('AdminApprovalModal - pendingColetivos:', pendingColetivos);
   console.log('AdminApprovalModal - approvedColetivos:', approvedColetivos);
@@ -131,7 +134,7 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-azul-600 to-verde-600 p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
@@ -210,7 +213,7 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
           <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Treinos Coletivos</h4>
           
           {coletivos.length === 0 ? (
@@ -225,7 +228,8 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
             </div>
           ) : (
             <div className="space-y-4 sm:space-y-6">
-              {coletivos.map(coletivo => (
+              {coletivos.map(coletivo => {
+                return (
                 <div key={coletivo.id} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Informações principais */}
@@ -260,7 +264,7 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
                           <div>
                             <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team1}</p>
                             <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
-                              {coletivo.team1_participants && coletivo.team1_participants.length > 0 ? (
+                              {coletivo.team1_participants && Array.isArray(coletivo.team1_participants) && coletivo.team1_participants.length > 0 ? (
                                 coletivo.team1_participants.map((participant, index) => (
                                   <div key={index} className="flex items-center space-x-2 p-2 bg-azul-50 rounded-lg">
                                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-azul-400 to-verde-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -277,7 +281,7 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
                           <div>
                             <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team2}</p>
                             <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
-                              {coletivo.team2_participants && coletivo.team2_participants.length > 0 ? (
+                              {coletivo.team2_participants && Array.isArray(coletivo.team2_participants) && coletivo.team2_participants.length > 0 ? (
                                 coletivo.team2_participants.map((participant, index) => (
                                   <div key={index} className="flex items-center space-x-2 p-2 bg-laranja-50 rounded-lg">
                                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-laranja-400 to-azul-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -341,23 +345,35 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
                   )}
 
                   {/* Informações de aprovação */}
-                  {coletivo.status !== 'pending' && (
+                  {coletivo.status === 'approved' && coletivo.approved_by && (
                     <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-xs sm:text-sm text-gray-600">
-                        <span>Aprovado por: {coletivo.approved_by || 'Admin'}</span>
+                        <span>Aprovado por: {coletivo.approved_by}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span>{formatDate(coletivo.approved_at)}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Informações de rejeição */}
+                  {coletivo.status === 'rejected' && coletivo.approved_by && (
+                    <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-xs sm:text-sm text-gray-600">
+                        <span>Rejeitado por: {coletivo.approved_by}</span>
                         <span className="hidden sm:inline">•</span>
                         <span>{formatDate(coletivo.approved_at)}</span>
                       </div>
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+        <div className="p-4 sm:p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
           <button
             onClick={onClose}
             className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-xl hover:from-azul-700 hover:to-verde-700 transition-all duration-300 font-bold text-sm sm:text-base"

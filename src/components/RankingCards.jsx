@@ -1,9 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrophyIcon, FireIcon, BoltIcon } from '@heroicons/react/24/solid';
 
 const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showVarietyModal, setShowVarietyModal] = useState(false);
+  const [manualActivities, setManualActivities] = useState([]);
+
+  // Carregar atividades manuais
+  useEffect(() => {
+    const fetchManualActivities = async () => {
+      try {
+        const response = await fetch('/api/manual-activities');
+        if (response.ok) {
+          const data = await response.json();
+          setManualActivities(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar atividades manuais:', error);
+      }
+    };
+
+    fetchManualActivities();
+  }, []);
 
   // Mapeamento de traduções para tipos de atividades
   const activityTranslations = {
@@ -96,6 +114,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
   const calorieTotals = {};
   const activityTypes = {};
 
+  // Processar check-ins do GymRats
   checkins.forEach(checkin => {
     const memberId = checkin.account_id;
     const calories = parseFloat(checkin.calories) || 0;
@@ -106,7 +125,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
     }
   });
 
-  // Processar tipos de atividades
+  // Processar tipos de atividades do GymRats
   checkInActivities.forEach(activity => {
     const memberId = activity.workout_id ? 
       checkins.find(c => c.id === activity.workout_id)?.account_id : null;
@@ -117,6 +136,18 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
       }
       activityTypes[memberId].add(activity.platform_activity);
     }
+  });
+
+  // Processar atividades manuais
+  manualActivities.forEach(activity => {
+    const memberId = activity.member_id;
+    
+    if (!activityTypes[memberId]) {
+      activityTypes[memberId] = new Set();
+    }
+    
+    // Adicionar atividade manual
+    activityTypes[memberId].add(activity.activity_type);
   });
 
   // Criar rankings
@@ -235,6 +266,17 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
   );
 
   const VarietyModal = ({ isOpen, onClose, member, activities }) => {
+    const [memberManualActivities, setMemberManualActivities] = useState([]);
+
+    useEffect(() => {
+      if (member && manualActivities.length > 0) {
+        const memberActivities = manualActivities.filter(activity => 
+          String(activity.member_id) === String(member.id)
+        );
+        setMemberManualActivities(memberActivities);
+      }
+    }, [member, manualActivities]);
+
     if (!isOpen) return null;
 
     return (
@@ -290,30 +332,79 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
                     {activities.length} atividades encontradas
                   </span>
                 </div>
-                {activities.map((activity, index) => (
-                  <div 
-                    key={index} 
-                    className="group flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:from-azul-50 hover:to-verde-50 hover:border-azul-200 transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="w-12 h-12 bg-gradient-to-br from-azul-500 to-verde-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <BoltIcon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-lg font-semibold text-gray-900 group-hover:text-azul-700 transition-colors">
-                        {translateActivity(activity)}
+                {/* Atividades do GymRats */}
+                {activities && activities.length > 0 && (
+                  <>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-2 h-2 bg-gradient-to-r from-azul-600 to-verde-600 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-600">
+                        Atividades do GymRats ({activities.length})
                       </span>
-                      <p className="text-sm text-gray-500 mt-1 group-hover:text-gray-600 transition-colors">
-                        {activity}
-                      </p>
                     </div>
-                    <div className="text-azul-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    {activities.map((activity, index) => (
+                      <div 
+                        key={`gymrats-${index}`} 
+                        className="group flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:from-azul-50 hover:to-verde-50 hover:border-azul-200 transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-azul-500 to-verde-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <BoltIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-lg font-semibold text-gray-900 group-hover:text-azul-700 transition-colors">
+                            {translateActivity(activity)}
+                          </span>
+                          <p className="text-sm text-gray-500 mt-1 group-hover:text-gray-600 transition-colors">
+                            {activity}
+                          </p>
+                        </div>
+                        <div className="text-azul-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Atividades Manuais */}
+                {memberManualActivities && memberManualActivities.length > 0 && (
+                  <>
+                    <div className="flex items-center space-x-2 mb-4 mt-6">
+                      <div className="w-2 h-2 bg-gradient-to-r from-verde-600 to-azul-600 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-600">
+                        Atividades Manuais ({memberManualActivities.length})
+                      </span>
                     </div>
-                  </div>
-                ))}
+                    {memberManualActivities.map((activity, index) => (
+                      <div 
+                        key={`manual-${activity.id}`} 
+                        className="group flex items-center space-x-4 p-4 bg-gradient-to-r from-verde-50 to-azul-50 rounded-xl border border-verde-200 hover:from-verde-100 hover:to-azul-100 hover:border-verde-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02]"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-verde-500 to-azul-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-lg font-semibold text-gray-900 group-hover:text-verde-700 transition-colors">
+                            {activity.activity_label}
+                          </span>
+                          <p className="text-sm text-gray-500 mt-1 group-hover:text-gray-600 transition-colors">
+                            Cadastrado em {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <div className="text-verde-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
@@ -322,6 +413,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
                 </div>
                 <p className="text-lg font-medium text-gray-600">Nenhuma atividade registrada</p>
                 <p className="text-sm text-gray-400 mt-2">Este participante ainda não registrou atividades</p>
+                <p className="text-xs text-gray-400 mt-1">Cadastre atividades manuais para aparecer aqui</p>
               </div>
             )}
           </div>
