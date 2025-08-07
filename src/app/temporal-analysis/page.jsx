@@ -157,44 +157,44 @@ export default function TemporalAnalysisPage() {
     const maxCount = Math.max(...sortedHours.map(([,count]) => count));
 
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-blue-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-blue-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">🕐</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">🕐</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Horários de Pico</h3>
-              <p className="text-sm text-gray-500">Horários com maior atividade no desafio</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Horários de Pico</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Horários com maior atividade no desafio</p>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {sortedHours.map(([hour, count], index) => {
               const percentage = (count / maxCount) * 100;
               return (
-                <div key={hour} className="group/item relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                <div key={hour} className="group/item relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
                       <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
                           {index + 1}
                         </div>
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-xs text-white font-bold">🔥</span>
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold text-gray-900 text-lg">{hour}h</div>
-                        <div className="text-sm text-gray-600">{count} treinos</div>
+                        <div className="font-bold text-gray-900 text-base sm:text-lg">{hour}h</div>
+                        <div className="text-xs sm:text-sm text-gray-600">{count} treinos</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                         {count}
                       </div>
                       <div className="text-xs text-gray-500">treinos</div>
@@ -202,7 +202,7 @@ export default function TemporalAnalysisPage() {
                   </div>
                   
                   {/* Barra de progresso animada */}
-                  <div className="mt-3 relative">
+                  <div className="mt-2 sm:mt-3 relative">
                     <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-1000 ease-out"
@@ -228,44 +228,44 @@ export default function TemporalAnalysisPage() {
     const maxCount = Math.max(...sortedDays.map(([,count]) => count));
 
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-green-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-green-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-green-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-green-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-green-600/5 to-emerald-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">📅</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">📅</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Dias Mais Ativos</h3>
-              <p className="text-sm text-gray-500">Dias da semana com maior engajamento</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Dias Mais Ativos</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Dias da semana com maior engajamento</p>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {sortedDays.map(([day, count], index) => {
               const percentage = (count / maxCount) * 100;
               return (
-                <div key={day} className="group/item relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                <div key={day} className="group/item relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
                       <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
                           {index + 1}
                         </div>
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-xs text-white font-bold">⭐</span>
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold text-gray-900 text-lg">{dayNames[day]}</div>
-                        <div className="text-sm text-gray-600">{count} treinos</div>
+                        <div className="font-bold text-gray-900 text-base sm:text-lg">{dayNames[day]}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">{count} treinos</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                         {count}
                       </div>
                       <div className="text-xs text-gray-500">treinos</div>
@@ -273,7 +273,7 @@ export default function TemporalAnalysisPage() {
                   </div>
                   
                   {/* Barra de progresso animada */}
-                  <div className="mt-3 relative">
+                  <div className="mt-2 sm:mt-3 relative">
                     <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-1000 ease-out"
@@ -296,23 +296,23 @@ export default function TemporalAnalysisPage() {
     const maxCount = Math.max(...timeSlots.map(([,count]) => count));
 
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-purple-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-purple-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-pink-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">⏰</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">⏰</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Distribuição Temporal</h3>
-              <p className="text-sm text-gray-500">Como o tempo é distribuído ao longo do dia</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Distribuição Temporal</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Como o tempo é distribuído ao longo do dia</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {timeSlots.map(([slot, count], index) => {
               const percentage = (count / maxCount) * 100;
               const colors = [
@@ -323,16 +323,16 @@ export default function TemporalAnalysisPage() {
               ];
               
               return (
-                <div key={slot} className="group/item relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
+                <div key={slot} className="group/item relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
                   <div className="flex flex-col items-center text-center space-y-2">
-                    <div className={`w-16 h-16 bg-gradient-to-r ${colors[index]} rounded-xl flex items-center justify-center shadow-lg group-hover/item:scale-110 transition-transform duration-300`}>
-                      <span className="text-white text-2xl">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${colors[index]} rounded-xl flex items-center justify-center shadow-lg group-hover/item:scale-110 transition-transform duration-300`}>
+                      <span className="text-white text-xl sm:text-2xl">
                         {index === 0 ? '🌅' : index === 1 ? '☀️' : index === 2 ? '🌆' : '🌙'}
                       </span>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900">{slot}</div>
-                      <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <div className="font-bold text-gray-900 text-sm sm:text-base">{slot}</div>
+                      <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                         {count}
                       </div>
                       <div className="text-xs text-gray-500">treinos</div>
@@ -360,23 +360,23 @@ export default function TemporalAnalysisPage() {
   // Componente: Tendência de Atividade com UX Avançada
   const ActivityTrendView = () => {
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-orange-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-orange-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-orange-600/5 to-red-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">📈</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">📈</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Tendência de Atividade</h3>
-              <p className="text-sm text-gray-500">Últimos 7 dias de engajamento</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Tendência de Atividade</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Últimos 7 dias de engajamento</p>
             </div>
           </div>
           
-          <div className="flex justify-between items-end h-40 space-x-2">
+          <div className="flex justify-between items-end h-32 sm:h-40 space-x-1 sm:space-x-2">
             {patterns.activityTrends.map(([date, count], index) => {
               const maxCount = Math.max(...patterns.activityTrends.map(([,c]) => c));
               const height = (count / maxCount) * 100;
@@ -386,14 +386,14 @@ export default function TemporalAnalysisPage() {
                 <div key={date} className="flex flex-col items-center flex-1 group/item">
                   <div 
                     className={`w-full bg-gradient-to-t from-orange-500 to-red-500 rounded-t transition-all duration-500 hover:scale-110 ${
-                      isToday ? 'ring-4 ring-orange-300 shadow-lg' : ''
+                      isToday ? 'ring-2 sm:ring-4 ring-orange-300 shadow-lg' : ''
                     }`}
                     style={{ height: `${Math.max(height, 8)}px` }}
                     title={`${date}: ${count} treinos`}
                   >
                     <div className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 bg-white/20 h-full rounded-t"></div>
                   </div>
-                  <span className="text-xs text-gray-500 mt-2 font-medium">
+                  <span className="text-xs text-gray-500 mt-1 sm:mt-2 font-medium">
                     {new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                   </span>
                   <span className="text-xs text-gray-400 mt-1">{count}</span>
@@ -413,42 +413,42 @@ export default function TemporalAnalysisPage() {
       .slice(0, 5);
 
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-red-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-red-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-red-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-red-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/5 to-pink-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-red-600/20 to-pink-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-red-600/20 to-pink-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">💪</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">💪</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Maior Intensidade</h3>
-              <p className="text-sm text-gray-500">Participantes com treinos mais intensos</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Maior Intensidade</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Participantes com treinos mais intensos</p>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {sortedIntensity.map((item, index) => (
-              <div key={item.member.id} className="group/item relative overflow-hidden bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100 hover:from-red-100 hover:to-pink-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+              <div key={item.member.id} className="group/item relative overflow-hidden bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-red-100 hover:from-red-100 hover:to-pink-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
                         {index + 1}
                       </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                         <span className="text-xs text-white font-bold">🔥</span>
                       </div>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 text-lg">{item.member.name || item.member.full_name}</div>
-                      <div className="text-sm text-gray-600">{item.totalCheckins} treinos</div>
+                      <div className="font-bold text-gray-900 text-base sm:text-lg break-words">{item.member.name || item.member.full_name}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{item.totalCheckins} treinos</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                    <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
                       {Math.round(item.avgCalories)}
                     </div>
                     <div className="text-xs text-gray-500">cal/dia</div>
@@ -468,42 +468,42 @@ export default function TemporalAnalysisPage() {
       .sort(([,a], [,b]) => b.checkins - a.checkins);
 
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-indigo-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-indigo-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 to-purple-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">🏆</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">🏆</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Performance por Equipe</h3>
-              <p className="text-sm text-gray-500">Comparação de engajamento entre equipes</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Performance por Equipe</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Comparação de engajamento entre equipes</p>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {sortedTeams.map(([team, data], index) => (
-              <div key={team} className="group/item relative overflow-hidden bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+              <div key={team} className="group/item relative overflow-hidden bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-3 sm:p-4 border border-indigo-100 hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover/item:scale-110 transition-transform duration-300">
                         {index + 1}
                       </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                         <span className="text-xs text-white font-bold">🏅</span>
                       </div>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 text-lg">{team}</div>
-                      <div className="text-sm text-gray-600">{data.members} membros</div>
+                      <div className="font-bold text-gray-900 text-base sm:text-lg break-words">{team}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{data.members} membros</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                       {data.checkins}
                     </div>
                     <div className="text-xs text-gray-500">treinos</div>
@@ -520,23 +520,23 @@ export default function TemporalAnalysisPage() {
   // NOVO: Componente de Padrões Semanais
   const WeeklyPatternsView = () => {
     return (
-      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-6 border border-white/50 hover:border-teal-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-teal-600/20 hover:-translate-y-1 relative overflow-hidden">
+      <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-teal-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-teal-600/20 hover:-translate-y-1 relative overflow-hidden">
         {/* Animação de fundo */}
         <div className="absolute inset-0 bg-gradient-to-r from-teal-600/5 to-cyan-600/5 animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-r from-teal-600/20 to-cyan-600/20 rounded-full -translate-y-10 translate-x-10 animate-bounce-subtle"></div>
+        <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-r from-teal-600/20 to-cyan-600/20 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10 animate-bounce-subtle"></div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white text-xl">📊</span>
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg animate-glow-pulse group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white text-lg sm:text-xl">📊</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-xl">Padrões Semanais</h3>
-              <p className="text-sm text-gray-500">Evolução do engajamento por semana</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Padrões Semanais</h3>
+              <p className="text-xs sm:text-sm text-gray-500">Evolução do engajamento por semana</p>
             </div>
           </div>
           
-          <div className="flex justify-between items-end h-40 space-x-2">
+          <div className="flex justify-between items-end h-32 sm:h-40 space-x-1 sm:space-x-2">
             {patterns.weeklyPatterns.map(([week, count], index) => {
               const maxCount = Math.max(...patterns.weeklyPatterns.map(([,c]) => c));
               const height = (count / maxCount) * 100;
@@ -550,7 +550,7 @@ export default function TemporalAnalysisPage() {
                   >
                     <div className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 bg-white/20 h-full rounded-t"></div>
                   </div>
-                  <span className="text-xs text-gray-500 mt-2 font-medium">
+                  <span className="text-xs text-gray-500 mt-1 sm:mt-2 font-medium">
                     Sem {index + 1}
                   </span>
                   <span className="text-xs text-gray-400 mt-1">{count}</span>
@@ -575,49 +575,50 @@ export default function TemporalAnalysisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-2 sm:p-4 lg:p-6 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Header com UX Avançada e Navegação */}
-        <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
+        <div className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 border border-white/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
           {/* Animação de fundo */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5 animate-pulse"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full -translate-y-16 translate-x-16 animate-bounce-subtle"></div>
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full -translate-y-12 sm:-translate-y-16 translate-x-12 sm:translate-x-16 animate-bounce-subtle"></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 lg:space-x-6">
                 {/* Botão de Retorno */}
                 <Link 
                   href="/"
-                  className="group/back flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg hover:scale-105 font-semibold"
+                  className="group/back flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-lg hover:scale-105 font-semibold text-sm sm:text-base w-full sm:w-auto"
                 >
-                  <svg className="w-5 h-5 group-hover/back:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover/back:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                   <span>Voltar ao Dashboard</span>
                 </Link>
                 
-                <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent break-words">
                     Análise Temporal Avançada
                   </h1>
-                  <p className="text-gray-600 mt-2 text-lg">
+                  <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg">
                     Insights únicos sobre padrões de comportamento e tendências temporais
                   </p>
                 </div>
               </div>
               
-              <div className="relative">
+              {/* Seletor responsivo */}
+              <div className="relative w-full sm:w-auto">
                 <select
                   value={viewType}
                   onChange={(e) => setViewType(e.target.value)}
-                  className="appearance-none bg-white/80 backdrop-blur-sm border-2 border-blue-200 rounded-xl px-6 py-3 pr-12 text-gray-700 font-semibold focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:bg-white/90 hover:shadow-lg cursor-pointer"
+                  className="appearance-none bg-white/80 backdrop-blur-sm border-2 border-blue-200 rounded-xl px-4 sm:px-6 py-2 sm:py-3 pr-10 sm:pr-12 text-gray-700 font-semibold focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 hover:bg-white/90 hover:shadow-lg cursor-pointer w-full sm:w-auto text-sm sm:text-base min-w-[200px] max-w-full"
                 >
                   <option value="patterns" className="py-2">📊 Padrões Temporais</option>
                   <option value="insights" className="py-2">💡 Insights Especiais</option>
                 </select>
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
@@ -628,7 +629,7 @@ export default function TemporalAnalysisPage() {
 
         {/* Content com Grid Responsivo */}
         {viewType === 'patterns' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             <PeakHoursView />
             <PeakDaysView />
             <TimeDistributionView />
@@ -637,7 +638,7 @@ export default function TemporalAnalysisPage() {
         )}
 
         {viewType === 'insights' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             <IntensityAnalysisView />
             <TeamComparisonView />
             <WeeklyPatternsView />

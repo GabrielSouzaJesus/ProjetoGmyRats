@@ -26,6 +26,29 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/* Responsividade para telas muito pequenas */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+@media (max-width: 474px) {
+  .xs\:inline {
+    display: none;
+  }
+}
+
+/* Esconder scrollbar horizontal */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
 /* Animações personalizadas para UX avançada */
 @keyframes bounce-subtle {
   0%, 100% {

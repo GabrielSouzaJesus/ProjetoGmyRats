@@ -65,51 +65,44 @@ export default function ChallengeBanner({ challenge }) {
         </div>
 
         {/* Conteúdo principal */}
-        <div className="relative z-10 p-3 sm:p-4 md:p-6 lg:p-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 md:gap-6">
+        <div className="relative z-10 p-2 sm:p-4 md:p-6 lg:p-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2 sm:gap-4 md:gap-6">
             
             {/* Informações do desafio */}
-            <div className="flex-1 space-y-2 sm:space-y-3 md:space-y-4">
+            <div className="flex-1 space-y-2 sm:space-y-3 md:space-y-4 min-w-0">
               {/* Título principal */}
               <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 drop-shadow-lg">
+                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 drop-shadow-lg break-words">
                   {challenge.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-white/90 text-xs sm:text-sm md:text-base">
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full font-semibold hover-lift">
+                  <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full font-semibold hover-lift text-xs sm:text-sm">
                     🏆 DESAFIO ENERGIA TOTAL
                   </span>
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full font-semibold hover-lift">
+                  <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full font-semibold hover-lift text-xs sm:text-sm">
                     60 DIAS 🏋️‍♂️
                   </span>
                 </div>
               </div>
 
-              {/* Descrição
-              <div className={`transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                <p className="text-white/90 text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl">
-                  {challenge.description}
-                </p>
-              </div> */}
-
               {/* Regras de pontuação */}
               <div className={`transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                <div className="bg-white/10 backdrop-blur-enhanced rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/20 hover-lift">
+                <div className="bg-white/10 backdrop-blur-enhanced rounded-lg sm:rounded-xl p-2 sm:p-4 border border-white/20 hover-lift">
                   <h3 className="text-white font-semibold mb-2 sm:mb-3 flex items-center gap-2 text-xs sm:text-sm md:text-base">
                     💞 Regras de Pontuação
                   </h3>
                   <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-white/90">
                     <div className="flex items-start gap-2">
-                      <span className="text-green-300 mt-0.5">✅</span>
-                      <span dangerouslySetInnerHTML={{ __html: renderMarkdown("1 treino válido (mínimo 40min) por dia = **1 ponto**") }} />
+                      <span className="text-green-300 mt-0.5 flex-shrink-0">✅</span>
+                      <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("1 treino válido (mínimo 40min) por dia = **1 ponto**") }} />
                     </div>
                     <div className="flex items-start gap-2">
-                      <span className="text-blue-300 mt-0.5">🤝</span>
-                      <span dangerouslySetInnerHTML={{ __html: renderMarkdown("Treino coletivo (aula, funcional, etc.) = **+3 pontos**") }} />
+                      <span className="text-blue-300 mt-0.5 flex-shrink-0">🤝</span>
+                      <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("Treino coletivo (aula, funcional, etc.) = **+3 pontos**") }} />
                     </div>
                     <div className="flex items-start gap-2">
-                      <span className="text-red-300 mt-0.5">❌</span>
-                      <span dangerouslySetInnerHTML={{ __html: renderMarkdown("Caminhada leve, passeio com cachorro, etc. **não pontuam**") }} />
+                      <span className="text-red-300 mt-0.5 flex-shrink-0">❌</span>
+                      <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("Caminhada leve, passeio com cachorro, etc. **não pontuam**") }} />
                     </div>
                   </div>
                 </div>
@@ -117,14 +110,14 @@ export default function ChallengeBanner({ challenge }) {
 
               {/* Instruções */}
               <div className={`transition-all duration-1000 delay-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-xs md:text-sm">
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-white/90 hover-lift">
+                <div className="flex flex-wrap gap-1 sm:gap-2 text-xs md:text-sm">
+                  <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full text-white/90 hover-lift text-xs">
                     📸 Registre com foto e duração
                   </span>
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-white/90 hover-lift">
+                  <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full text-white/90 hover-lift text-xs">
                     🏷️ Use #coletivo para treinos em grupo
                   </span>
-                  <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-white/90 hover-lift">
+                  <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full text-white/90 hover-lift text-xs">
                     👥 Ranking individual e por grupo
                   </span>
                 </div>
@@ -132,21 +125,21 @@ export default function ChallengeBanner({ challenge }) {
 
               {/* Período */}
               <div className={`transition-all duration-1000 delay-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                <p className="text-white/80 text-xs sm:text-sm md:text-base font-medium">
+                <p className="text-white/80 text-xs sm:text-sm md:text-base font-medium break-words">
                   📅 Período: {formatDateBR(challenge.start_date)} a {formatDateBR(challenge.end_date)}
                 </p>
               </div>
             </div>
 
             {/* Highlight rotativo - oculto em mobile muito pequeno */}
-            <div className={`transition-all duration-1000 delay-1000 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'} hidden sm:block`}>
+            <div className={`transition-all duration-1000 delay-1000 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'} hidden sm:block flex-shrink-0`}>
               <div className="relative">
-                <div className={`bg-gradient-to-br ${highlights[currentHighlight].color} text-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-2xl border border-white/30 backdrop-blur-sm transition-all duration-500 hover-lift animate-glow-pulse`}>
+                <div className={`bg-gradient-to-br ${highlights[currentHighlight].color} text-white rounded-lg sm:rounded-xl p-2 sm:p-4 md:p-6 lg:p-8 shadow-2xl border border-white/30 backdrop-blur-sm transition-all duration-500 hover-lift animate-glow-pulse`}>
                   <div className="text-center">
-                    <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-2 sm:mb-3 animate-bounce-subtle">
+                    <div className="text-xl sm:text-3xl md:text-4xl lg:text-5xl mb-2 sm:mb-3 animate-bounce-subtle">
                       {highlights[currentHighlight].icon}
                     </div>
-                    <h3 className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold mb-2">
+                    <h3 className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold mb-2 break-words">
                       {highlights[currentHighlight].text}
                     </h3>
                     <div className="flex justify-center space-x-1">
