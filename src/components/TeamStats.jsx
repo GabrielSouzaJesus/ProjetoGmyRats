@@ -190,8 +190,8 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
 
       {/* Team Details Modal */}
       {selectedTeam && (
-        <div className="modal-mobile modal-overlay">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
+        <div className="modal-mobile modal-overlay" style={{ zIndex: 40 }}>
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col relative z-40 max-h-[98vh]">
             {/* Header */}
             <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
               <div className="flex items-center justify-between">
