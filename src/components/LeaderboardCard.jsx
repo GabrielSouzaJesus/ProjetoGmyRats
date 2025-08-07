@@ -173,7 +173,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     .filter(m => !search || (m.name || m.full_name || "").toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => Number(b.total) - Number(a.total));
 
-  const ranking = showAllParticipants ? allRanking : allRanking.slice(0, 10);
+  const ranking = showAllParticipants ? allRanking : allRanking.slice(0, 20);
   const maiorPontuacao = allRanking.length > 0 ? allRanking[0].total : 0;
 
   // Função para calcular ranking correto com empates
@@ -349,7 +349,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   }
 
   return (
-    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in min-h-[600px] flex flex-col">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in min-h-[800px] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
@@ -466,82 +466,96 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       )}
 
       {/* Participants List */}
-      <div className="space-y-3 flex-1 min-h-[400px] overflow-y-auto">
-        {rankingWithRanks.map((m, i) => (
-          <div
-            key={m.id}
-            className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group ${
-              i < 3 && !search && !showAllParticipants && !hasTiesInTop3() ? 'hidden' : ''
-            }`}
-            onClick={() => setSelectedMember(m)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-lg ${
-                  i === 0 ? 'ring-2 ring-yellow-500' :
-                  i === 1 ? 'ring-2 ring-gray-400' :
-                  i === 2 ? 'ring-2 ring-orange-600' :
-                  ''
-                }`}>
-                  {m.profile_picture_url ? (
-                    <img 
-                      src={m.profile_picture_url} 
-                      alt={m.name || m.full_name || `Participante ${m.id}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm sm:text-lg ${
-                      i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                      i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
-                      i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
-                      'bg-gradient-to-r from-azul-600 to-verde-600'
-                    }`}>
-                      {i < 3 ? ['🥇', '🥈', '🥉'][i] : getInitials(m.name || m.full_name || `P${m.id}`)}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 flex items-center">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base" title={m.name || m.full_name || `Participante ${m.id}`}>
-                      {m.name || m.full_name || `Participante ${m.id}`}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">
-                      {m.rank}º lugar
-                    </p>
+      <div className="space-y-3 flex-1 min-h-[600px] overflow-y-auto">
+        {rankingWithRanks.length > 0 ? (
+          rankingWithRanks.map((m, i) => (
+            <div
+              key={m.id}
+              className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200 hover:bg-white transition-all cursor-pointer group ${
+                i < 3 && !search && !showAllParticipants && !hasTiesInTop3() ? 'hidden' : ''
+              }`}
+              onClick={() => setSelectedMember(m)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-lg ${
+                    i === 0 ? 'ring-2 ring-yellow-500' :
+                    i === 1 ? 'ring-2 ring-gray-400' :
+                    i === 2 ? 'ring-2 ring-orange-600' :
+                    ''
+                  }`}>
+                    {m.profile_picture_url ? (
+                      <img 
+                        src={m.profile_picture_url} 
+                        alt={m.name || m.full_name || `Participante ${m.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm sm:text-lg ${
+                        i === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                        i === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                        i === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                        'bg-gradient-to-r from-azul-600 to-verde-600'
+                      }`}>
+                        {i < 3 ? ['🥇', '🥈', '🥉'][i] : getInitials(m.name || m.full_name || `P${m.id}`)}
+                      </div>
+                    )}
                   </div>
-                  <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
-                    {/* Botão de cadastrar atividade */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedMemberForActivity(m);
-                        setShowActivityModal(true);
-                      }}
-                      className="p-2 bg-gradient-to-r from-azul-500 to-verde-500 text-white rounded-lg hover:from-azul-600 hover:to-verde-600 transition-all"
-                      title="Cadastrar atividade manual"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </button>
-                    <div className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm whitespace-nowrap ${
-                      m.total >= 15 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                      m.total >= 10 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
-                      m.total >= 5 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
-                      'bg-gradient-to-r from-gray-500 to-gray-600'
-                    }`}>
-                      {m.total} pts
+                  <div className="flex-1 min-w-0 flex items-center">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base" title={m.name || m.full_name || `Participante ${m.id}`}>
+                        {m.name || m.full_name || `Participante ${m.id}`}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">
+                        {m.rank}º lugar
+                      </p>
+                    </div>
+                    <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                      {/* Botão de cadastrar atividade */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMemberForActivity(m);
+                          setShowActivityModal(true);
+                        }}
+                        className="p-2 bg-gradient-to-r from-azul-500 to-verde-500 text-white rounded-lg hover:from-azul-600 hover:to-verde-600 transition-all"
+                        title="Cadastrar atividade manual"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </button>
+                      <div className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm whitespace-nowrap ${
+                        m.total >= 15 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                        m.total >= 10 ? 'bg-gradient-to-r from-laranja-600 to-verde-600' :
+                        m.total >= 5 ? 'bg-gradient-to-r from-azul-600 to-verde-600' :
+                        'bg-gradient-to-r from-gray-500 to-gray-600'
+                      }`}>
+                        {m.total} pts
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <p className="text-lg font-semibold">Nenhum participante encontrado</p>
+              <p className="text-sm">Tente ajustar sua pesquisa</p>
+            </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Show All Participants Button */}
-      {!showAllParticipants && allRanking.length > 10 && !search && (
+      {!showAllParticipants && allRanking.length > 20 && !search && (
         <div className="mt-6 text-center flex-shrink-0">
           <button
             onClick={() => setShowAllParticipants(true)}
@@ -559,7 +573,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             onClick={() => setShowAllParticipants(false)}
             className="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
           >
-            Mostrar apenas top 10
+            Mostrar apenas top 20
           </button>
         </div>
       )}
