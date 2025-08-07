@@ -349,9 +349,9 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   }
 
   return (
-    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in">
+    <div className="bg-white/60 backdrop-blur-md border border-white/30 rounded-2xl shadow-2xl p-6 animate-fade-in min-h-[600px] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Classificação Individual</h2>
           <p className="text-gray-600 text-sm">Ranking dos participantes</p>
@@ -364,25 +364,25 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       </div>
 
       {/* Search Bar */}
-      <div className="relative mb-6">
+      <div className="relative mb-6 flex-shrink-0">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-      <input
-        type="text"
-        placeholder="Buscar participante..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
+        <input
+          type="text"
+          placeholder="Buscar participante..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-azul-600 focus:border-transparent transition-all"
-        autoComplete="off"
-      />
+          autoComplete="off"
+        />
       </div>
 
       {/* Top 3 Podium */}
       {rankingWithRanks.length >= 3 && !search && !showAllParticipants && !hasTiesInTop3() && (
-        <div className="mb-6">
+        <div className="mb-6 flex-shrink-0">
           <div className="flex items-end justify-center space-x-2 mb-4">
             {/* 2nd Place */}
             <div className="flex flex-col items-center">
@@ -452,7 +452,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Mensagem quando há empates */}
       {rankingWithRanks.length >= 3 && !search && !showAllParticipants && hasTiesInTop3() && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-xl">
+        <div className="mb-6 p-4 bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-xl flex-shrink-0">
           <div className="flex items-center justify-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-azul-500 to-verde-500 rounded-full flex items-center justify-center">
               <span className="text-white text-sm">🏆</span>
@@ -466,7 +466,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       )}
 
       {/* Participants List */}
-      <div className="space-y-3">
+      <div className="space-y-3 flex-1 min-h-[400px] overflow-y-auto">
         {rankingWithRanks.map((m, i) => (
           <div
             key={m.id}
@@ -503,7 +503,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                 <div className="flex-1 min-w-0 flex items-center">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base" title={m.name || m.full_name || `Participante ${m.id}`}>
-              {m.name || m.full_name || `Participante ${m.id}`}
+                      {m.name || m.full_name || `Participante ${m.id}`}
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">
                       {m.rank}º lugar
@@ -542,7 +542,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Show All Participants Button */}
       {!showAllParticipants && allRanking.length > 10 && !search && (
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center flex-shrink-0">
           <button
             onClick={() => setShowAllParticipants(true)}
             className="bg-gradient-to-r from-verde-600 to-azul-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-verde-700 hover:to-azul-700 transition-all transform hover:scale-105 shadow-lg"
@@ -554,7 +554,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Show Less Button */}
       {showAllParticipants && !search && (
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center flex-shrink-0">
           <button
             onClick={() => setShowAllParticipants(false)}
             className="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
