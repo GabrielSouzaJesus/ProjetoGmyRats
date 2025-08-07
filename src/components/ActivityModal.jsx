@@ -84,8 +84,8 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-mobile modal-overlay" style={{ zIndex: 99999 }}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
+    <div className="modal-mobile modal-overlay" style={{ zIndex: 999999 }}>
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col relative z-[999999] max-h-[98vh]">
         {/* Header */}
         <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 p-4 sm:p-6 md:p-8 relative overflow-hidden flex-shrink-0">
           {/* Background Pattern */}
@@ -123,7 +123,7 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 modal-scroll">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 modal-scroll min-h-0">
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Member Info */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6 rounded-2xl border border-gray-200">
@@ -212,7 +212,7 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 md:p-8 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
+        <div className="p-4 sm:p-6 md:p-8 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0 relative z-10">
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
             <button
               onClick={onClose}

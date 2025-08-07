@@ -144,10 +144,6 @@ export default function TemporalAnalysisPage() {
       memberTeamMap[membership.account_id] = membership.team_name;
     });
     
-    console.log('Team Memberships:', data.teamMemberships.length);
-    console.log('Member Team Map:', Object.keys(memberTeamMap).length);
-    console.log('Teams found:', [...new Set(Object.values(memberTeamMap))]);
-    
     data.members.forEach(member => {
       const team = memberTeamMap[member.id] || 'Sem Equipe';
       if (!teamData[team]) teamData[team] = { checkins: 0, calories: 0, members: 0 };
@@ -157,8 +153,6 @@ export default function TemporalAnalysisPage() {
       teamData[team].checkins += memberCheckins.length;
       teamData[team].calories += memberCheckins.reduce((sum, c) => sum + (parseFloat(c.calories) || 0), 0);
     });
-    
-    console.log('Final Team Data:', teamData);
 
     patterns.teamComparison = teamData;
 

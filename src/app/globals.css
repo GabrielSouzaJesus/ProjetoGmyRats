@@ -79,12 +79,17 @@ body {
 
 /* Garantir que o modal fique acima de tudo */
 .modal-overlay {
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
+}
+
+/* Garantir que o modal de atividade fique acima de tudo */
+.modal-overlay[style*="zIndex: 999999"] {
+  z-index: 999999 !important;
 }
 
 /* Scroll personalizado para modais */

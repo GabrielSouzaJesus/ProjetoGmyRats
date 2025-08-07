@@ -566,8 +566,8 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Audit Modal */}
       {selectedMember && (
-        <div className="modal-mobile modal-overlay" style={{ zIndex: 99999 }}>
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
+        <div className="modal-mobile modal-overlay" style={{ zIndex: 999999 }}>
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col relative z-[999999] max-h-[98vh]">
             {/* Header */}
             <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
               <div className="flex items-center justify-between">
@@ -599,7 +599,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 modal-scroll">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 modal-scroll min-h-0">
               <div className="space-y-3 sm:space-y-4">
                 {getCheckinsByDay(selectedMember.id).map((dia, index) => (
                   <div key={dia.date} className="bg-gray-50 border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border">
@@ -708,8 +708,6 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                           </div>
                         </div>
                       )}
-                      
-
                     </div>
                   </div>
                 ))}
