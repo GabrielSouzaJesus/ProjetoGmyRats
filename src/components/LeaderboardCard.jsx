@@ -566,10 +566,10 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
 
       {/* Audit Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl max-h-[98vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-hidden animate-fade-in">
+        <div className="modal-mobile modal-overlay" style={{ zIndex: 99999 }}>
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl">
+            <div className="bg-gradient-to-r from-verde-600 to-azul-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-1 min-w-0">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -599,7 +599,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             </div>
 
             {/* Content */}
-            <div className="p-3 sm:p-4 md:p-6 max-h-[70vh] sm:max-h-[65vh] md:max-h-[60vh] overflow-y-auto modal-scroll">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 modal-scroll">
               <div className="space-y-3 sm:space-y-4">
                 {getCheckinsByDay(selectedMember.id).map((dia, index) => (
                   <div key={dia.date} className="bg-gray-50 border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border">

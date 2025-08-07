@@ -10,6 +10,8 @@ export default function TemporalAnalysisPage() {
     checkins: [],
     checkInActivities: [],
     checkInMedia: [],
+    teamMemberships: [],
+    teams: [],
     loading: true
   });
 
@@ -18,11 +20,13 @@ export default function TemporalAnalysisPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [members, checkins, checkInActivities, checkInMedia] = await Promise.all([
+        const [members, checkins, checkInActivities, checkInMedia, teamMemberships, teams] = await Promise.all([
           fetch('/api/members').then(res => res.json()),
           fetch('/api/checkins').then(res => res.json()),
           fetch('/api/check_in_activities').then(res => res.json()),
-          fetch('/api/check_in_media').then(res => res.json())
+          fetch('/api/check_in_media').then(res => res.json()),
+          fetch('/api/team_memberships').then(res => res.json()),
+          fetch('/api/teams').then(res => res.json())
         ]);
 
         setData({
@@ -30,6 +34,8 @@ export default function TemporalAnalysisPage() {
           checkins,
           checkInActivities,
           checkInMedia,
+          teamMemberships,
+          teams,
           loading: false
         });
       } catch (error) {
@@ -131,8 +137,19 @@ export default function TemporalAnalysisPage() {
 
     // Análise de performance por equipe
     const teamData = {};
+    
+    // Criar um mapa de membros para suas equipes
+    const memberTeamMap = {};
+    data.teamMemberships.forEach(membership => {
+      memberTeamMap[membership.account_id] = membership.team_name;
+    });
+    
+    console.log('Team Memberships:', data.teamMemberships.length);
+    console.log('Member Team Map:', Object.keys(memberTeamMap).length);
+    console.log('Teams found:', [...new Set(Object.values(memberTeamMap))]);
+    
     data.members.forEach(member => {
-      const team = member.team || 'Sem Equipe';
+      const team = memberTeamMap[member.id] || 'Sem Equipe';
       if (!teamData[team]) teamData[team] = { checkins: 0, calories: 0, members: 0 };
       teamData[team].members++;
       
@@ -140,6 +157,8 @@ export default function TemporalAnalysisPage() {
       teamData[team].checkins += memberCheckins.length;
       teamData[team].calories += memberCheckins.reduce((sum, c) => sum + (parseFloat(c.calories) || 0), 0);
     });
+    
+    console.log('Final Team Data:', teamData);
 
     patterns.teamComparison = teamData;
 

@@ -190,10 +190,10 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
 
       {/* Team Details Modal */}
       {selectedTeam && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl max-h-[98vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-hidden animate-fade-in">
+        <div className="modal-mobile modal-overlay">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-2xl h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl">
+            <div className="bg-gradient-to-r from-laranja-600 to-verde-600 text-white p-3 sm:p-4 md:p-6 rounded-t-xl sm:rounded-t-2xl flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-1 min-w-0">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -221,7 +221,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
             </div>
 
             {/* Stats Cards */}
-            <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100">
+            <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100 flex-shrink-0">
               <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 <div className="bg-gradient-to-r from-azul-600 to-verde-600 text-white rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4">
                   <div className="text-lg sm:text-xl md:text-2xl font-bold">{selectedTeam.scoreAjustado.toFixed(2)}</div>
@@ -239,7 +239,7 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
             </div>
 
             {/* Members List */}
-            <div className="p-3 sm:p-4 md:p-6 max-h-[60vh] sm:max-h-[55vh] md:max-h-[50vh] overflow-y-auto modal-scroll">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 modal-scroll">
               <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Ranking dos Membros</h4>
               <div className="space-y-2 sm:space-y-3">
               {selectedTeam.members

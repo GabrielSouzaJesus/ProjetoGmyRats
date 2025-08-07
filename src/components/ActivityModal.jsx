@@ -84,25 +84,25 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-hidden animate-fade-in">
+    <div className="modal-mobile modal-overlay" style={{ zIndex: 99999 }}>
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg h-[98vh] sm:h-[95vh] md:h-[90vh] overflow-hidden animate-fade-in flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 p-6 sm:p-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 p-4 sm:p-6 md:p-8 relative overflow-hidden flex-shrink-0">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -translate-y-12 sm:-translate-y-16 translate-x-12 sm:translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full translate-y-10 sm:translate-y-12 -translate-x-10 sm:-translate-x-12"></div>
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">
                     Cadastrar Atividade
                   </h3>
                   <p className="text-white/90 text-sm sm:text-base font-medium">
@@ -112,9 +112,9 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
               </div>
               <button
                 onClick={onClose}
-                className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 border border-white/30"
+                className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 border border-white/30"
               >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -123,8 +123,8 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 modal-scroll">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Member Info */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6 rounded-2xl border border-gray-200">
               <div className="flex items-center space-x-4">
@@ -163,21 +163,21 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
                 </label>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto pr-2 custom-scrollbar">
                 {activities.map((activity) => (
                   <button
                     key={activity.value}
                     type="button"
                     onClick={() => setSelectedActivity(activity.value)}
-                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 transform hover:scale-105 ${
+                    className={`p-3 sm:p-4 rounded-2xl border-2 transition-all duration-200 transform hover:scale-105 ${
                       selectedActivity === activity.value
                         ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-red-50 text-orange-700 shadow-lg shadow-orange-500/25'
                         : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex flex-col items-center space-y-2">
-                      <span className="text-2xl sm:text-3xl">{activity.icon}</span>
-                      <span className="text-sm sm:text-base font-semibold text-center leading-tight">
+                      <span className="text-xl sm:text-2xl">{activity.icon}</span>
+                      <span className="text-xs sm:text-sm font-semibold text-center leading-tight">
                         {activity.label}
                       </span>
                     </div>
@@ -212,22 +212,22 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 sm:p-8 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+        <div className="p-4 sm:p-6 md:p-8 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition-all font-semibold text-lg"
+              className="flex-1 px-4 sm:px-6 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition-all font-semibold text-base sm:text-lg"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
               disabled={isLoading || (!selectedActivity && !customActivity.trim())}
-              className="flex-1 px-6 py-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Salvando...</span>
                 </div>
               ) : (
