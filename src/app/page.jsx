@@ -5,7 +5,6 @@ import TeamStats from "../components/TeamStats";
 import ActivityChart from "../components/ActivityChart";
 import Layout from "../components/Layout";
 import ChallengeBanner from "../components/ChallengeBanner";
-import MediaGallery from "../components/MediaGallery";
 import CommentsFeed from "../components/CommentsFeed";
 import QuickStats from "../components/QuickStats";
 import AdvancedStats from "../components/AdvancedStats";
@@ -210,11 +209,8 @@ export default function Home() {
         onSuccess={login}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <MediaGallery 
-          media={media} 
-          members={members}
-        />
+      {/* Comentários Feed */}
+      <div className="mt-6">
         <CommentsFeed
           comments={comments}
           getMemberName={id => {
@@ -226,6 +222,7 @@ export default function Home() {
           teamMemberships={teamMemberships}
         />
       </div>
+      
       <ActivityChart 
         checkins={checkins} 
         teams={teams}

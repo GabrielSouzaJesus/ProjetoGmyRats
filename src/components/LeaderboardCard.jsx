@@ -18,6 +18,16 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
     // Corrige o fuso horário para contabilizar corretamente
     const date = corrigirFusoHorario(checkin.occurred_at || checkin.created_at || "");
     if (!date) return;
+    
+          // Verificar se o check-in foi feito no mesmo dia do treino
+      const workoutDay = corrigirFusoHorario(checkin.occurred_at || checkin.created_at);
+      const checkinDay = corrigirFusoHorario(checkin.created_at);
+      
+      // Se o check-in foi criado em um dia diferente do treino, não contabilizar
+      if (workoutDay !== checkinDay) {
+        return; // Ignora este check-in
+      }
+    
     if (!checkinsByDay[date]) checkinsByDay[date] = [];
     checkinsByDay[date].push(checkin);
   });
@@ -212,15 +222,32 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   function getCheckinsByDay(memberId) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
     const byDay = {};
+    const ignoredCheckins = []; // Para armazenar check-ins ignorados
+    
     memberCheckIns.forEach(checkin => {
       // Corrige o fuso horário para contabilizar corretamente
       const date = corrigirFusoHorario(checkin.occurred_at || checkin.created_at || "");
       if (!date) return;
+      
+      // Verificar se o check-in foi feito no mesmo dia do treino
+      const workoutDay = corrigirFusoHorario(checkin.occurred_at || checkin.created_at);
+      const checkinDay = corrigirFusoHorario(checkin.created_at);
+      
+      // Se o check-in foi criado em um dia diferente do treino, não contabilizar
+      // Mas apenas se realmente houver uma diferença válida
+      if (workoutDay && checkinDay && workoutDay !== checkinDay) {
+        console.log(`Check-in ${checkin.id} ignorado: treino em ${workoutDay}, postado em ${checkinDay}`);
+        ignoredCheckins.push({ checkin, workoutDay, checkinDay, date: workoutDay });
+        return; // Ignora este check-in
+      }
+      
+      // Se chegou até aqui, o check-in é válido
       if (!byDay[date]) byDay[date] = [];
       byDay[date].push(checkin);
     });
+    
     // Para cada dia, soma os pontos conforme a regra
-    return Object.entries(byDay).map(([date, dayCheckins]) => {
+    const result = Object.entries(byDay).map(([date, dayCheckins]) => {
       let diaTemColetivo = false;
       let diaTemIndividual = false;
       let temAtividadesRegistradas = false;
@@ -228,8 +255,9 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
       for (const checkin of dayCheckins) {
         const activities = checkInActivities.filter(a => String(a.workout_id) === String(checkin.id));
         
-        // Verificar se há atividades registradas
-        if (activities.length > 0) {
+        // Verificar se há atividades registradas (com platform_activity preenchido)
+        const activitiesWithType = activities.filter(a => a.platform_activity && a.platform_activity.trim() !== '');
+        if (activitiesWithType.length > 0) {
           temAtividadesRegistradas = true;
         }
         
@@ -239,6 +267,12 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
         } else if (activities.length > 0) {
           durationMinutes = activities.reduce((sum, a) => sum + (Number(a.duration_millis) || 0), 0) / 1000 / 60;
         }
+        
+        // Se não tem duração explícita, usar 60 minutos como padrão se há check-in
+        if (durationMinutes === 0 && checkin.id) {
+          durationMinutes = 60;
+        }
+        
         const isColetivo =
           (checkin.description && checkin.description.includes("#coletivo")) ||
           (checkin.notes && checkin.notes.includes("#coletivo")) ||
@@ -252,17 +286,66 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
           diaTemIndividual = true;
         }
       }
+      
       let pontos = 0;
       if (diaTemColetivo) pontos = 1; // Mudança: coletivo agora conta apenas 1 ponto no individual
       else if (diaTemIndividual) pontos = 1;
       return { date, pontos, checkins: dayCheckins, temAtividadesRegistradas };
     }).sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Adicionar dias ignorados ao resultado
+    const ignoredDays = ignoredCheckins.reduce((acc, item) => {
+      const existingDay = acc.find(day => day.date === item.date);
+      if (existingDay) {
+        if (!existingDay.ignoredCheckins) {
+          existingDay.ignoredCheckins = [];
+        }
+        existingDay.ignoredCheckins.push(item);
+      } else {
+        acc.push({ date: item.date, pontos: 0, checkins: [], temAtividadesRegistradas: false, ignoredCheckins: [item] });
+      }
+      return acc;
+    }, []);
+    
+    // Combinar dias válidos e ignorados, ordenar por data
+    // Se já existe um dia válido, NÃO mostrar os ignorados
+    const allDays = [...result];
+    
+    // Adicionar apenas os dias ignorados que NÃO têm correspondente válido
+    ignoredDays.forEach(ignoredDay => {
+      const existingValidDay = allDays.find(day => day.date === ignoredDay.date);
+      if (!existingValidDay) {
+        // Se NÃO existe um dia válido, adicionar o dia ignorado
+        allDays.push(ignoredDay);
+      }
+      // Se já existe um dia válido, IGNORAR completamente os check-ins ignorados
+    });
+    
+    // Ordenar por data
+    return allDays.sort((a, b) => a.date.localeCompare(b.date));
   }
 
   function formatDateBR(dateStr) {
     if (!dateStr) return "";
     const [y, m, d] = dateStr.split("-");
     return `${d}/${m}/${y}`;
+  }
+
+  function formatDateTimeBR(dateTimeStr) {
+    if (!dateTimeStr) return "";
+    try {
+      const date = new Date(dateTimeStr);
+      // Converte UTC para horário de Brasília (UTC-3)
+      const dataLocal = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+      const day = dataLocal.getDate().toString().padStart(2, '0');
+      const month = (dataLocal.getMonth() + 1).toString().padStart(2, '0');
+      const year = dataLocal.getFullYear();
+      const hours = dataLocal.getHours().toString().padStart(2, '0');
+      const minutes = dataLocal.getMinutes().toString().padStart(2, '0');
+      return `${day}/${month}/${year} às ${hours}:${minutes}`;
+    } catch (error) {
+      return dateTimeStr;
+    }
   }
 
   return (
@@ -519,7 +602,7 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             <div className="p-3 sm:p-4 md:p-6 max-h-[70vh] sm:max-h-[65vh] md:max-h-[60vh] overflow-y-auto modal-scroll">
               <div className="space-y-3 sm:space-y-4">
                 {getCheckinsByDay(selectedMember.id).map((dia, index) => (
-                  <div key={dia.date} className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-100">
+                  <div key={dia.date} className="bg-gray-50 border-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border">
                     <div className="flex items-center justify-between mb-2 sm:mb-3">
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm ${
@@ -543,7 +626,8 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                     </div>
                     
                     <div className="space-y-2">
-                      {dia.checkins.map((checkin, idx) => (
+                      {/* Exibir apenas check-ins válidos */}
+                      {dia.checkins && dia.checkins.length > 0 && dia.checkins.map((checkin, idx) => (
                         <div key={checkin.id} className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
@@ -563,13 +647,45 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                         </div>
                       ))}
                       
+                      {/* Exibir check-ins ignorados apenas se NÃO há check-ins válidos */}
+                      {(!dia.checkins || dia.checkins.length === 0) && dia.ignoredCheckins && dia.ignoredCheckins.length > 0 && dia.ignoredCheckins.map((item, idx) => (
+                        <div key={`ignored-${item.checkin.id}`} className="bg-red-100 rounded-lg p-3 border border-red-300">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-red-600 font-medium text-sm">
+                                  ⚠️ Treino Ignorado
+                                </span>
+                              </div>
+                              <p className="font-medium text-gray-900 mb-1 text-sm sm:text-base truncate">
+                                {item.checkin.title || item.checkin.description || `Check-in ${item.checkin.id}`}
+                              </p>
+                              {item.checkin.notes && (
+                                <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{item.checkin.notes}</p>
+                              )}
+                              <p className="text-xs text-red-600 mt-1">
+                                <strong>Treino realizado:</strong> {formatDateBR(item.workoutDay)} | 
+                                <strong> Postado em:</strong> {formatDateTimeBR(item.checkin.created_at)}
+                              </p>
+                            </div>
+                            <div className="ml-2 sm:ml-3 text-right flex-shrink-0">
+                              <div className="text-xs text-red-500 bg-red-200 px-2 py-1 rounded">
+                                Ignorado
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {item.checkin.duration ? `${Math.round(item.checkin.duration)}min` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
                       {/* Botão para cadastrar atividade se não há atividades registradas */}
-                      {/* TESTE: Mostrar sempre para debug */}
-                      {true && (
-                        <div className="bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-lg p-3">
+                      {dia.checkins && dia.checkins.length > 0 && !dia.temAtividadesRegistradas && (
+                        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-gradient-to-r from-azul-500 to-verde-500 rounded-full flex items-center justify-center">
+                              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
@@ -585,13 +701,15 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                                 setSelectedDateForActivity(formatDateBR(dia.date));
                                 setShowActivityModal(true);
                               }}
-                              className="px-3 py-1 bg-gradient-to-r from-azul-500 to-verde-500 text-white text-xs rounded-lg hover:from-azul-600 hover:to-verde-600 transition-all font-medium"
+                              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm rounded-lg hover:from-orange-600 hover:to-red-600 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
                             >
                               Cadastrar
                             </button>
                           </div>
                         </div>
                       )}
+                      
+
                     </div>
                   </div>
                 ))}

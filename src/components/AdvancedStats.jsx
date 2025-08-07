@@ -37,9 +37,22 @@ export default function AdvancedStats({
   const getParticipantesSemFalhas = () => {
     const participantesComCheckins = new Set();
     const participantesPorDia = {};
+    const ignoredCheckins = []; // Para armazenar check-ins ignorados
     
     checkins.forEach(checkin => {
       const memberId = String(checkin.account_id);
+      
+      // Verificar se o check-in foi feito no mesmo dia do treino
+      const workoutDay = corrigirFusoHorario(checkin.occurred_at || checkin.created_at);
+      const checkinDay = corrigirFusoHorario(checkin.created_at);
+      
+      // Se o check-in foi criado em um dia diferente do treino, não contabilizar
+      if (workoutDay && checkinDay && workoutDay !== checkinDay) {
+        ignoredCheckins.push({ checkin, workoutDay, checkinDay, memberId });
+        return; // Ignora este check-in
+      }
+      
+      // Se chegou até aqui, o check-in é válido
       const date = corrigirFusoHorario(checkin.occurred_at || checkin.created_at || "");
       if (!date) return;
       

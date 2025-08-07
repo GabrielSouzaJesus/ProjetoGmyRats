@@ -5,31 +5,31 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
   const [customActivity, setCustomActivity] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Lista de atividades traduzidas
+  // Lista de atividades traduzidas com ícones
   const activities = [
-    { value: 'running', label: 'Corrida' },
-    { value: 'walking', label: 'Caminhada' },
-    { value: 'cycling', label: 'Ciclismo' },
-    { value: 'swimming', label: 'Natação' },
-    { value: 'gym', label: 'Academia' },
-    { value: 'yoga', label: 'Yoga' },
-    { value: 'pilates', label: 'Pilates' },
-    { value: 'crossfit', label: 'CrossFit' },
-    { value: 'boxing', label: 'Boxe' },
-    { value: 'martial_arts', label: 'Artes Marciais' },
-    { value: 'dance', label: 'Dança' },
-    { value: 'tennis', label: 'Tênis' },
-    { value: 'soccer', label: 'Futebol' },
-    { value: 'basketball', label: 'Basquete' },
-    { value: 'volleyball', label: 'Vôlei' },
-    { value: 'hiking', label: 'Trilha' },
-    { value: 'climbing', label: 'Escalada' },
-    { value: 'surfing', label: 'Surfe' },
-    { value: 'skateboarding', label: 'Skate' },
-    { value: 'rollerblading', label: 'Patinação' },
-    { value: 'rowing', label: 'Remo' },
-    { value: 'triathlon', label: 'Triatlo' },
-    { value: 'custom', label: 'Outra atividade' }
+    { value: 'running', label: 'Corrida', icon: '🏃‍♂️' },
+    { value: 'walking', label: 'Caminhada', icon: '🚶‍♂️' },
+    { value: 'cycling', label: 'Ciclismo', icon: '🚴‍♂️' },
+    { value: 'swimming', label: 'Natação', icon: '🏊‍♂️' },
+    { value: 'gym', label: 'Academia', icon: '💪' },
+    { value: 'yoga', label: 'Yoga', icon: '🧘‍♀️' },
+    { value: 'pilates', label: 'Pilates', icon: '🤸‍♀️' },
+    { value: 'crossfit', label: 'CrossFit', icon: '🔥' },
+    { value: 'boxing', label: 'Boxe', icon: '🥊' },
+    { value: 'martial_arts', label: 'Artes Marciais', icon: '🥋' },
+    { value: 'dance', label: 'Dança', icon: '💃' },
+    { value: 'tennis', label: 'Tênis', icon: '🎾' },
+    { value: 'soccer', label: 'Futebol', icon: '⚽' },
+    { value: 'basketball', label: 'Basquete', icon: '🏀' },
+    { value: 'volleyball', label: 'Vôlei', icon: '🏐' },
+    { value: 'hiking', label: 'Trilha', icon: '🏔️' },
+    { value: 'climbing', label: 'Escalada', icon: '🧗‍♂️' },
+    { value: 'surfing', label: 'Surfe', icon: '🏄‍♂️' },
+    { value: 'skateboarding', label: 'Skate', icon: '🛹' },
+    { value: 'rollerblading', label: 'Patinação', icon: '⛸️' },
+    { value: 'rowing', label: 'Remo', icon: '🚣‍♂️' },
+    { value: 'triathlon', label: 'Triatlo', icon: '🏃‍♂️🚴‍♂️🏊‍♂️' },
+    { value: 'custom', label: 'Outra atividade', icon: '➕' }
   ];
 
   const handleSubmit = async (e) => {
@@ -84,74 +84,103 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-hidden animate-fade-in">
         {/* Header */}
-        <div className="bg-gradient-to-r from-azul-500 to-verde-500 p-4 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </div>
-                              <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-white">Cadastrar Atividade</h3>
-                  <p className="text-white/80 text-sm">
-                    {selectedDate ? `Adicionar atividade para ${selectedDate}` : 'Adicionar atividade manual'}
+        <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 p-6 sm:p-8 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">
+                    Cadastrar Atividade
+                  </h3>
+                  <p className="text-white/90 text-sm sm:text-base font-medium">
+                    {selectedDate ? `Para ${selectedDate}` : 'Atividade manual'}
                   </p>
                 </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 border border-white/30"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Member Info */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-azul-500 to-verde-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {member.photo ? (
-                    <img src={member.photo} alt={member.name || member.full_name} className="w-12 h-12 rounded-full object-cover" />
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6 rounded-2xl border border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg">
+                  {member.profile_picture_url ? (
+                    <img 
+                      src={member.profile_picture_url} 
+                      alt={member.name || member.full_name} 
+                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover" 
+                    />
                   ) : (
                     (member.name || member.full_name || '?').charAt(0).toUpperCase()
                   )}
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">{member.name || member.full_name}</h4>
-                  <p className="text-sm text-gray-600">Cadastrando atividade manual</p>
+                <div className="flex-1">
+                  <h4 className="font-bold text-gray-900 text-lg sm:text-xl">
+                    {member.name || member.full_name}
+                  </h4>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    Cadastrando atividade manual
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Activity Selection */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Tipo de Atividade
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <label className="text-lg sm:text-xl font-bold text-gray-900">
+                  Tipo de Atividade
+                </label>
+              </div>
               
-              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                 {activities.map((activity) => (
                   <button
                     key={activity.value}
                     type="button"
                     onClick={() => setSelectedActivity(activity.value)}
-                    className={`p-3 rounded-xl border-2 transition-all ${
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 transform hover:scale-105 ${
                       selectedActivity === activity.value
-                        ? 'border-azul-500 bg-azul-50 text-azul-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                        ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-red-50 text-orange-700 shadow-lg shadow-orange-500/25'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <span className="text-sm font-medium">{activity.label}</span>
+                    <div className="flex flex-col items-center space-y-2">
+                      <span className="text-2xl sm:text-3xl">{activity.icon}</span>
+                      <span className="text-sm sm:text-base font-semibold text-center leading-tight">
+                        {activity.label}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -159,16 +188,23 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
 
             {/* Custom Activity Input */}
             {selectedActivity === 'custom' && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Descreva a atividade
-                </label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <label className="text-lg font-bold text-gray-900">
+                    Descreva a atividade
+                  </label>
+                </div>
                 <input
                   type="text"
                   value={customActivity}
                   onChange={(e) => setCustomActivity(e.target.value)}
-                  placeholder="Ex: Funcional, HIIT, Spinning..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-azul-500 focus:border-transparent transition-all"
+                  placeholder="Ex: Funcional, HIIT, Spinning, Zumba..."
+                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-lg"
                 />
               </div>
             )}
@@ -176,20 +212,27 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
-          <div className="flex space-x-3">
+        <div className="p-6 sm:p-8 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
+              className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition-all font-semibold text-lg"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
               disabled={isLoading || (!selectedActivity && !customActivity.trim())}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-azul-500 to-verde-500 text-white rounded-xl hover:from-azul-600 hover:to-verde-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-4 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isLoading ? 'Salvando...' : 'Cadastrar Atividade'}
+              {isLoading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Salvando...</span>
+                </div>
+              ) : (
+                'Cadastrar Atividade'
+              )}
             </button>
           </div>
         </div>

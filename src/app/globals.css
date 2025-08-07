@@ -26,103 +26,29 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  /* Classes para modais responsivos */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  /* Melhorar scroll em mobile */
-  .modal-scroll {
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-  
-  .modal-scroll::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .modal-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
-  }
-  
-  .modal-scroll::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-  }
-  
-  .modal-scroll::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-  }
-}
-
-/* Animações para o SplashScreen */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(20px);}
-  to { opacity: 1; transform: none;}
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
-  25% { transform: translateY(-20px) rotate(90deg); opacity: 0.6; }
-  50% { transform: translateY(-40px) rotate(180deg); opacity: 0.8; }
-  75% { transform: translateY(-20px) rotate(270deg); opacity: 0.6; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
-}
-
-@keyframes slide-up {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes scale-in {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-@keyframes shine {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
+/* Animações personalizadas para UX avançada */
 @keyframes bounce-subtle {
   0%, 100% {
-    transform: translateY(-8px) translateX(8px) scale(1);
+    transform: translateY(0) translateX(0);
   }
   50% {
-    transform: translateY(-12px) translateX(8px) scale(1.1);
+    transform: translateY(-10px) translateX(5px);
   }
 }
 
-@keyframes fade-in {
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -130,84 +56,109 @@ body {
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.7s cubic-bezier(0.4,0,0.2,1) both;
-}
-
-.animate-gradient {
-  background-size: 400% 400%;
-  animation: gradient 8s ease infinite;
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.8s ease-out both;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.6s ease-out both;
-}
-
-.animate-shine {
-  animation: shine 3s ease-in-out infinite;
-}
-
 .animate-bounce-subtle {
-  animation: bounce-subtle 2s ease-in-out infinite;
+  animation: bounce-subtle 3s ease-in-out infinite;
 }
 
 .animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
+  animation: glow-pulse 2s ease-in-out infinite;
 }
 
-/* Gradiente radial personalizado */
-.bg-gradient-radial {
-  background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.2) 100%);
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* Efeito de brilho */
-.shine {
-  position: relative;
-  overflow: hidden;
+/* Scrollbar personalizada */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
 }
 
-.shine::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: shine 2s infinite;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
 }
 
-/* Efeitos de hover para elementos interativos */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #f97316, #dc2626);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ea580c, #b91c1c);
+}
+
+/* Gradientes personalizados */
+.bg-gradient-to-br {
+  background: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Efeitos de hover avançados */
 .hover-lift {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Backdrop blur melhorado */
-.backdrop-blur-enhanced {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+/* Animações de entrada */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* @media (prefers-color-scheme: dark) {
-  body { background: #18181b; color: #f4f4f5; }
-  .bg-white { background: #23232b !important; }
-  .text-gray-500 { color: #a1a1aa !important; }
-  .shadow { box-shadow: 0 2px 8px 0 #0003 !important; }
-} */
+.slide-in-bottom {
+  animation: slideInFromBottom 0.6s ease-out;
+}
+
+/* Efeitos de glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Gradientes de texto */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animações de loading */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Efeitos de shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
