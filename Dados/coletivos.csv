@@ -1,2 +1,1 @@
-id,title,description,total_points,duration,photo_url,team1,team2,team1_points,team2_points,team1_participants,team2_participants,created_at,hashtag,status,approved_by,approved_at
-1754444141015,TESTE,TESTE,30,60,/uploads/1754444141015_1754444141025_133900461053456559.jpg,Dados e Indicadores ,Estudos e Proteção ,24,6,698095:Raissa Luna|1177597:Paula Garcia|1644752:Caroline Argôlo|3432244:Natalia|4613998:Gabriel Souza|2435077:Jonas Apostolos|4624187:Isabella Calfa|4626095:Leonardo Liulle,512030:Rafael Baqueiro|900220:Diego Duque,2025-08-06T01:35:41.035Z,#coletivo_dados_e_indicadores__estudos_e_proteção__30pts,pending,,
+id,title,team1,team2,total_points,photo_url,status,approved_by,approved_at,created_at,updated_at

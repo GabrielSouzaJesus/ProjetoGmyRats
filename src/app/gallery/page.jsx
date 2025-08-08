@@ -16,13 +16,19 @@ export default function GalleryPage() {
     loading: true
   });
 
-  const [viewType, setViewType] = useState('grid');
-  const [selectedTeam, setSelectedTeam] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('all');
-  const [selectedMember, setSelectedMember] = useState('all');
-  const [selectedMediaType, setSelectedMediaType] = useState('all');
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [likedPosts, setLikedPosts] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [showStories, setShowStories] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [currentUser] = useState({
+    name: 'gmyrats_user',
+    fullName: 'GymRats User',
+    profilePic: null
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,54 +84,42 @@ export default function GalleryPage() {
     return data.reactions.filter(r => String(r.workout_id) === String(workoutId));
   };
 
-  // Função para obter membros de uma equipe
-  const getTeamMembers = (teamId) => {
-    if (teamId === 'all') return data.members;
+  // Filtrar mídia das últimas 12 horas para stories
+  const getRecentMedia = () => {
+    const now = new Date();
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
     
-    const teamMemberIds = data.teamMemberships
-      .filter(tm => String(tm.team_id) === String(teamId))
-      .map(tm => String(tm.account_id));
-    
-    return data.members.filter(m => teamMemberIds.includes(String(m.id)));
+    return data.media.filter(m => {
+      const mediaDate = new Date(m.created_at);
+      return mediaDate >= twelveHoursAgo;
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
-  // Filtrar mídia baseado nos filtros selecionados
-  const getFilteredMedia = () => {
+  // Filtrar mídia para o feed
+  const getFeedMedia = () => {
     let filtered = data.media;
 
-    // Filtro por equipe
-    if (selectedTeam !== 'all') {
-      const teamMembers = getTeamMembers(selectedTeam);
-      const teamMemberIds = teamMembers.map(m => String(m.id));
-      const teamCheckins = data.checkins.filter(c => teamMemberIds.includes(String(c.account_id)));
-      const teamWorkoutIds = teamCheckins.map(c => String(c.id));
-      filtered = filtered.filter(m => teamWorkoutIds.includes(String(m.workout_id)));
-    }
-
-    // Filtro por membro
-    if (selectedMember !== 'all') {
-      const memberCheckins = data.checkins.filter(c => String(c.account_id) === String(selectedMember));
+    // Se um membro específico foi selecionado, filtrar apenas suas mídias
+    if (selectedMember) {
+      const memberCheckins = data.checkins.filter(c => String(c.account_id) === String(selectedMember.id));
       const memberWorkoutIds = memberCheckins.map(c => String(c.id));
       filtered = filtered.filter(m => memberWorkoutIds.includes(String(m.workout_id)));
     }
 
-    // Filtro por tipo de mídia
-    if (selectedMediaType !== 'all') {
-      filtered = filtered.filter(m => m.medium_type?.includes(selectedMediaType));
-    }
-
-    // Filtro por data
-    if (selectedDate !== 'all') {
-      filtered = filtered.filter(m => {
-        const mediaDate = corrigirFusoHorario(m.created_at);
-        return mediaDate === selectedDate;
-      });
+    // Se há busca, filtrar por nome do membro
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase();
+      const matchingMembers = data.members.filter(m => 
+        (m.name || m.full_name || '').toLowerCase().includes(searchLower)
+      );
+      const matchingMemberIds = matchingMembers.map(m => String(m.id));
+      const matchingCheckins = data.checkins.filter(c => matchingMemberIds.includes(String(c.account_id)));
+      const matchingWorkoutIds = matchingCheckins.map(c => String(c.id));
+      filtered = filtered.filter(m => matchingWorkoutIds.includes(String(m.workout_id)));
     }
 
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
-
-  const filteredMedia = getFilteredMedia();
 
   // Função para alternar like
   const toggleLike = (mediaId) => {
@@ -140,8 +134,183 @@ export default function GalleryPage() {
     });
   };
 
-  // Componente: Card de Mídia no estilo FitGram Premium
-  const FitGramCard = ({ mediaItem }) => {
+  // Componente: Header Mobile
+  const MobileHeader = () => {
+    return (
+      <div className={`lg:hidden ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} sticky top-0 z-40`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center space-x-3">
+            <Link href="/" className="text-blue-500">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <h1 className="text-xl font-bold">FitGram</h1>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+            <button className="text-gray-600 dark:text-gray-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            <button className="text-gray-600 dark:text-gray-300 relative">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">6</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Componente: Sidebar Esquerda (Desktop)
+  const LeftSidebar = () => {
+    const navItems = [
+      { icon: '🏠', label: 'Página inicial', active: true },
+      { icon: '🔍', label: 'Pesquisa', active: false },
+      { icon: '🧭', label: 'Explorar', active: false },
+      { icon: '▶️', label: 'Reels', active: false },
+      { icon: '💬', label: 'Mensagens', active: false, badge: 3 },
+      { icon: '❤️', label: 'Notificações', active: false },
+      { icon: '➕', label: 'Criar', active: false },
+      { icon: '📊', label: 'Painel', active: false },
+      { icon: '👤', label: 'Perfil', active: false },
+      { icon: '☰', label: 'Mais', active: false }
+    ];
+
+    return (
+      <div className={`hidden lg:block w-64 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} h-screen fixed left-0 top-0 p-4 border-r ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+        {/* Logo */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold">FitGram</h1>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar pessoas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full px-3 py-2 ${darkMode ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-gray-100 border-gray-300 text-black placeholder-gray-500'} border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="space-y-2">
+          {navItems.map((item, index) => (
+            <div key={index} className="relative">
+              <button
+                className={`w-full flex items-center space-x-4 px-3 py-2 rounded-lg transition-colors ${
+                  item.active 
+                    ? darkMode ? 'bg-gray-800' : 'bg-gray-100'
+                    : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                }`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-sm font-medium">{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            </div>
+          ))}
+        </nav>
+
+        {/* Back to Dashboard */}
+        <div className="mt-8 pt-8 border-t border-gray-800">
+          <Link
+            href="/"
+            className="flex items-center space-x-4 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-blue-400"
+          >
+            <span className="text-xl">⬅️</span>
+            <span className="text-sm font-medium">Voltar ao Dashboard</span>
+          </Link>
+        </div>
+      </div>
+    );
+  };
+
+  // Componente: Stories
+  const Stories = () => {
+    const recentMedia = getRecentMedia();
+    const uniqueMembers = [...new Set(recentMedia.map(m => {
+      const checkin = getCheckinInfo(m.workout_id);
+      return checkin ? checkin.account_id : null;
+    }))].filter(id => id !== null);
+
+    if (uniqueMembers.length === 0) return null;
+
+    return (
+      <div className={`${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border-b p-4`}>
+        <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
+          {/* Seu story */}
+          <div className="flex flex-col items-center space-y-1 flex-shrink-0 cursor-pointer">
+            <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+              <div className={`w-full h-full rounded-full ${darkMode ? 'bg-black' : 'bg-white'} p-0.5`}>
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                  {currentUser.name[0].toUpperCase()}
+                </div>
+              </div>
+            </div>
+            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} truncate max-w-16`}>
+              Seu story
+            </span>
+          </div>
+
+          {uniqueMembers.slice(0, 10).map((memberId, index) => {
+            const member = getMemberInfo(memberId);
+            const memberMedia = recentMedia.filter(m => {
+              const checkin = getCheckinInfo(m.workout_id);
+              return checkin && String(checkin.account_id) === String(memberId);
+            });
+
+            return (
+              <div 
+                key={memberId}
+                className="flex flex-col items-center space-y-1 flex-shrink-0 cursor-pointer"
+                onClick={() => {
+                  setSelectedMember(member);
+                  setShowStories(true);
+                  setCurrentStoryIndex(0);
+                }}
+              >
+                <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+                  <div className={`w-full h-full rounded-full ${darkMode ? 'bg-black' : 'bg-white'} p-0.5`}>
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                      {(member.name || member.full_name || '?')[0].toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+                <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} truncate max-w-16`}>
+                  {member.name || member.full_name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Componente: Post do Feed
+  const FeedPost = ({ mediaItem }) => {
     const checkin = getCheckinInfo(mediaItem.workout_id);
     const member = checkin ? getMemberInfo(checkin.account_id) : null;
     const comments = getMediaComments(mediaItem.workout_id);
@@ -150,267 +319,305 @@ export default function GalleryPage() {
     const isLiked = likedPosts.has(mediaItem.id);
     const totalLikes = reactions.length + (isLiked ? 1 : 0);
 
+    if (!member) return null;
+
     return (
-      <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-blue-200 hover:-translate-y-2 relative">
-        {/* Header do Card com UX Premium */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+      <div className={`${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border mb-4`}>
+        {/* Header do Post */}
+        <div className="flex items-center justify-between p-3">
           <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
-                {(member?.name || member?.full_name || '?')[0].toUpperCase()}
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white"></div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+              {(member.name || member.full_name || '?')[0].toUpperCase()}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm sm:text-base truncate">
-                {member?.name || member?.full_name}
-              </p>
-              <p className="text-xs text-gray-500 flex items-center space-x-1">
-                <span>📅</span>
-                <span>
-                  {new Date(mediaItem.created_at).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                  })}
-                </span>
+            <div>
+              <p className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-black'}`}>{member.name || member.full_name}</p>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {new Date(mediaItem.created_at).toLocaleDateString('pt-BR')}
               </p>
             </div>
           </div>
-          <button className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
             </svg>
           </button>
         </div>
 
-        {/* Mídia com UX Avançada */}
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Mídia */}
+        <div className="relative">
           {isVideo ? (
             <video
               src={mediaItem.url}
               poster={mediaItem.thumbnail_url}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full aspect-square object-cover"
               controls
             />
           ) : (
             <img
               src={mediaItem.url}
-              alt={`Treino de ${member?.name || member?.full_name}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              alt={`Treino de ${member.name || member.full_name}`}
+              className="w-full aspect-square object-cover"
               loading="lazy"
             />
           )}
-          
-          {/* Badge de tipo com UX Premium */}
-          <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-            <div className="bg-black/70 text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full backdrop-blur-sm shadow-lg border border-white/20">
-              {isVideo ? '🎥 Vídeo' : '📸 Foto'}
-            </div>
-          </div>
-
-          {/* Overlay de interação */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => toggleLike(mediaItem.id)}
-                    className={`transition-all duration-200 hover:scale-110 ${
-                      isLiked ? 'text-red-500 scale-110' : 'text-white hover:text-red-400'
-                    }`}
-                  >
-                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
-                  <button className="text-white hover:text-blue-400 transition-colors hover:scale-110">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Ações com UX Premium */}
-        <div className="p-3 sm:p-4 bg-gradient-to-br from-white to-gray-50">
+        {/* Ações */}
+        <div className="p-3">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => toggleLike(mediaItem.id)}
-                className={`transition-all duration-200 hover:scale-110 ${
-                  isLiked ? 'text-red-500 scale-110' : 'text-gray-400 hover:text-red-500'
+                className={`transition-all duration-200 ${
+                  isLiked ? 'text-red-500' : darkMode ? 'text-gray-400 hover:text-red-500' : 'text-gray-400 hover:text-red-500'
                 }`}
               >
-                <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-6 h-6 ${isLiked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </button>
-              <button className="text-gray-400 hover:text-blue-500 transition-colors hover:scale-110">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </button>
-              <button className="text-gray-400 hover:text-green-500 transition-colors hover:scale-110">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                 </svg>
               </button>
             </div>
-            <button className="text-gray-400 hover:text-purple-500 transition-colors hover:scale-110">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
             </button>
           </div>
 
-          {/* Likes com UX Premium */}
+          {/* Likes */}
           {totalLikes > 0 && (
-            <div className="mb-3">
-              <p className="font-bold text-gray-900 text-sm flex items-center space-x-2">
-                <span className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
-                  <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white fill-current" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                </span>
-                <span>{totalLikes} {totalLikes === 1 ? 'curtida' : 'curtidas'}</span>
-              </p>
-            </div>
+            <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{totalLikes} curtidas</p>
           )}
 
-          {/* Comentários com UX Premium */}
+          {/* Comentários */}
           {comments.length > 0 && (
-            <div className="mb-3">
-              <div className="space-y-2">
-                {comments.slice(0, 2).map((comment, index) => (
-                  <p key={index} className="text-sm text-gray-900 bg-gray-50 rounded-lg p-2">
-                    <span className="font-bold text-blue-600">{getMemberInfo(comment.account_id)?.name || getMemberInfo(comment.account_id)?.full_name}</span>
-                    <span className="ml-2">{comment.text}</span>
-                  </p>
-                ))}
-                {comments.length > 2 && (
-                  <p className="text-sm text-blue-600 cursor-pointer hover:text-blue-800 font-medium">
-                    Ver todos os {comments.length} comentários
-                  </p>
-                )}
-              </div>
+            <div className="space-y-1 mb-2">
+              {comments.slice(0, 2).map((comment, index) => (
+                <p key={index} className={`text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
+                  <span className="font-semibold">{getMemberInfo(comment.account_id)?.name || getMemberInfo(comment.account_id)?.full_name}</span>
+                  <span className="ml-2">{comment.text}</span>
+                </p>
+              ))}
+              {comments.length > 2 && (
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} cursor-pointer`}>
+                  Ver todos os {comments.length} comentários
+                </p>
+              )}
             </div>
           )}
 
-          {/* Timestamp com UX Premium */}
-          <p className="text-xs text-gray-400 uppercase tracking-wide flex items-center space-x-1">
-            <span>🕒</span>
-            <span>
-              {new Date(mediaItem.created_at).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              })}
-            </span>
+          {/* Timestamp */}
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
+            {new Date(mediaItem.created_at).toLocaleDateString('pt-BR')}
           </p>
         </div>
       </div>
     );
   };
 
-  // Componente: Estatísticas do FitGram no padrão do Dashboard
-  const FitGramStats = () => {
-    const totalMedia = filteredMedia.length;
-    const totalPhotos = filteredMedia.filter(m => m.medium_type?.includes('image')).length;
-    const totalVideos = filteredMedia.filter(m => m.medium_type?.includes('video')).length;
-    const totalComments = filteredMedia.reduce((sum, m) => sum + getMediaComments(m.workout_id).length, 0);
-    const totalReactions = filteredMedia.reduce((sum, m) => sum + getMediaReactions(m.workout_id).length, 0);
-
-    const stats = [
-      {
-        value: totalMedia,
-        label: 'Posts',
-        icon: '📸',
-        color: 'from-azul-600 to-verde-600',
-        description: 'Mídias compartilhadas'
-      },
-      {
-        value: totalPhotos,
-        label: 'Fotos',
-        icon: '🖼️',
-        color: 'from-verde-600 to-laranja-600',
-        description: 'Imagens capturadas'
-      },
-      {
-        value: totalVideos,
-        label: 'Vídeos',
-        icon: '🎥',
-        color: 'from-laranja-600 to-azul-600',
-        description: 'Conteúdo em vídeo'
-      },
-      {
-        value: totalComments + totalReactions,
-        label: 'Interações',
-        icon: '💬',
-        color: 'from-azul-600 to-verde-600',
-        description: 'Engajamento total'
-      }
+  // Componente: Bottom Navigation (Mobile)
+  const BottomNavigation = () => {
+    const navItems = [
+      { icon: '🏠', label: 'Início', active: true },
+      { icon: '🔍', label: 'Buscar', active: false },
+      { icon: '➕', label: 'Criar', active: false },
+      { icon: '▶️', label: 'Reels', active: false },
+      { icon: '👤', label: 'Perfil', active: false }
     ];
 
     return (
-      <div className="mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {stats.map((stat, index) => (
-            <div 
+      <div className={`lg:hidden fixed bottom-0 left-0 right-0 ${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border-t z-40`}>
+        <div className="flex items-center justify-around py-2">
+          {navItems.map((item, index) => (
+            <button
               key={index}
-              className="group bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/50 hover:border-verde-600/30 transition-all duration-500 hover:shadow-2xl hover:shadow-verde-600/20 hover:-translate-y-2 relative overflow-hidden"
+              className={`flex flex-col items-center space-y-1 p-2 ${
+                item.active 
+                  ? darkMode ? 'text-white' : 'text-black'
+                  : darkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}
             >
-              {/* Background decorativo */}
-              <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`}></div>
-              <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-verde-600/10 to-azul-600/10 rounded-full -translate-y-6 translate-x-6 sm:-translate-y-8 sm:translate-x-8 animate-float"></div>
-              
-              <div className="relative z-10">
-                {/* Ícone */}
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <span className="text-white text-lg sm:text-xl">{stat.icon}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="w-2 h-2 bg-verde-600 rounded-full animate-pulse"></div>
-                  </div>
-                </div>
-
-                {/* Valor */}
-                <div className="mb-2">
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-verde-600 group-hover:to-azul-600 transition-all duration-500">
-                    {stat.value.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Label */}
-                <div className="mb-2">
-                  <h3 className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-gray-800 transition-colors duration-300">
-                    {stat.label}
-                  </h3>
-                </div>
-
-                {/* Descrição */}
-                <div>
-                  <p className="text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-300">
-                    {stat.description}
-                  </p>
-                </div>
-
-                {/* Indicador de crescimento */}
-                <div className="mt-3 sm:mt-4 flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    <div className="w-1 h-1 bg-verde-600 rounded-full animate-pulse"></div>
-                    <div className="w-1 h-1 bg-azul-600 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-1 h-1 bg-laranja-600 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-                  </div>
-                  <span className="text-xs text-gray-400 font-medium">Tempo real</span>
-                </div>
-              </div>
-            </div>
+              <span className="text-xl">{item.icon}</span>
+              <span className="text-xs">{item.label}</span>
+            </button>
           ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Componente: Sidebar Direita (Desktop)
+  const RightSidebar = () => {
+    const suggestions = data.members.slice(0, 5);
+
+    return (
+      <div className={`hidden lg:block w-80 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} h-screen fixed right-0 top-0 p-4 border-l ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+        {/* Current User */}
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+            {currentUser.name[0].toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{currentUser.name}</p>
+            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{currentUser.fullName}</p>
+          </div>
+          <button className="text-blue-400 text-xs font-semibold">Mudar</button>
+        </div>
+
+        {/* Suggestions */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Sugestões para você</h3>
+            <button className={`text-xs ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>Ver tudo</button>
+          </div>
+          
+          <div className="space-y-3">
+            {suggestions.map((member, index) => (
+              <div key={member.id} className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                  {(member.name || member.full_name || '?')[0].toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">{member.name || member.full_name}</p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Seguido(a) por outros</p>
+                </div>
+                <button className="text-blue-400 text-xs font-semibold">Seguir</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Links */}
+        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} space-y-2`}>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sobre</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Ajuda</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Imprensa</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>API</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Carreiras</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Privacidade</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Termos</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Localizações</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Idioma</a>
+            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Meta Verified</a>
+          </div>
+          <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>© 2025 FITGRAM FROM GYMRATS</p>
+        </div>
+
+        {/* Floating Message Bar */}
+        <div className={`absolute bottom-4 right-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg p-3 shadow-lg`}>
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-black'}`}>Mensagens</span>
+            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">3</span>
+          </div>
+          <div className="flex space-x-1 mt-2">
+            {suggestions.slice(0, 3).map((member, index) => (
+              <div key={index} className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                {(member.name || member.full_name || '?')[0].toUpperCase()}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Componente: Modal de Stories
+  const StoriesModal = () => {
+    if (!showStories || !selectedMember) return null;
+
+    const memberMedia = getRecentMedia().filter(m => {
+      const checkin = getCheckinInfo(m.workout_id);
+      return checkin && String(checkin.account_id) === String(selectedMember.id);
+    });
+
+    if (memberMedia.length === 0) return null;
+
+    const currentMedia = memberMedia[currentStoryIndex];
+    const isVideo = currentMedia.medium_type?.includes('video');
+
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div className="relative w-full h-full max-w-md mx-auto">
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                {(selectedMember.name || selectedMember.full_name || '?')[0].toUpperCase()}
+              </div>
+              <span className="text-white font-semibold">{selectedMember.name || selectedMember.full_name}</span>
+            </div>
+            <button 
+              onClick={() => setShowStories(false)}
+              className="text-white hover:text-gray-300"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="absolute top-0 left-0 right-0 z-20 p-4">
+            <div className="flex space-x-1">
+              {memberMedia.map((_, index) => (
+                <div key={index} className="flex-1 h-1 bg-gray-600 rounded-full">
+                  <div 
+                    className={`h-full bg-white rounded-full transition-all duration-300 ${
+                      index <= currentStoryIndex ? 'w-full' : 'w-0'
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Media */}
+          <div className="w-full h-full flex items-center justify-center">
+            {isVideo ? (
+              <video
+                src={currentMedia.url}
+                poster={currentMedia.thumbnail_url}
+                className="w-full h-full object-contain"
+                controls
+                autoPlay
+              />
+            ) : (
+              <img
+                src={currentMedia.url}
+                alt={`Story de ${selectedMember.name || selectedMember.full_name}`}
+                className="w-full h-full object-contain"
+              />
+            )}
+          </div>
+
+          {/* Navigation */}
+          <button 
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+            onClick={() => setCurrentStoryIndex(prev => Math.max(0, prev - 1))}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button 
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+            onClick={() => setCurrentStoryIndex(prev => Math.min(memberMedia.length - 1, prev + 1))}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -418,225 +625,53 @@ export default function GalleryPage() {
 
   if (data.loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-indigo-600 rounded-full animate-spin" style={{ animationDelay: '0.5s' }}></div>
-        </div>
+      <div className={`flex items-center justify-center h-screen ${darkMode ? 'bg-black' : 'bg-white'}`}>
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     );
   }
 
+  const feedMedia = getFeedMedia();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-6xl mx-auto">
-        {/* Header FitGram Premium - Mobile Responsive */}
-        <div className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-              {/* Top Row - Mobile */}
-              <div className="flex items-center justify-between sm:justify-start sm:space-x-8">
-                {/* Botão de Retorno Premium */}
-                <Link 
-                  href="/"
-                  className="group flex items-center space-x-2 sm:space-x-3 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl sm:rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-xl hover:scale-105 font-semibold shadow-lg text-sm sm:text-base"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span className="hidden sm:inline">Dashboard</span>
-                  <span className="sm:hidden">Voltar</span>
-                </Link>
-                
-                <div className="flex items-center space-x-3 sm:space-x-4">
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg sm:text-2xl">F</span>
-                  </div>
-                  <div>
-                    <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      FitGram
-                    </h1>
-                    <p className="text-xs sm:text-sm text-gray-500 font-medium">Galeria Interativa</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Bottom Row - Mobile */}
-              <div className="flex items-center justify-center sm:justify-end space-x-2 sm:space-x-4">
-                {/* Toggle de visualização Premium */}
-                <div className="flex bg-gray-100 rounded-xl sm:rounded-2xl p-1 shadow-inner">
-                  <button
-                    onClick={() => setViewType('grid')}
-                    className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold text-sm sm:text-base ${
-                      viewType === 'grid' 
-                        ? 'bg-white text-blue-600 shadow-lg scale-105' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1 sm:space-x-2">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                      </svg>
-                      <span className="hidden sm:inline">Grid</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setViewType('list')}
-                    className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 font-semibold text-sm sm:text-base ${
-                      viewType === 'list' 
-                        ? 'bg-white text-blue-600 shadow-lg scale-105' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1 sm:space-x-2">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                      </svg>
-                      <span className="hidden sm:inline">Lista</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className={`min-h-screen ${darkMode ? 'bg-black' : 'bg-white'}`}>
+      {/* Mobile Header */}
+      <MobileHeader />
 
-        <div className="p-4 sm:p-6">
-          {/* Filtros Avançados - Sempre Visíveis com UX Premium */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50"></div>
-            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-full -translate-y-12 translate-x-12 sm:-translate-y-16 sm:translate-x-16"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center">
-                  <span className="text-white text-sm sm:text-lg">🔍</span>
-                </div>
-                <h3 className="text-lg sm:text-2xl font-bold text-gray-900">Filtros Avançados</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {/* Filtro por Equipe */}
-                <div className="relative">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 sm:mb-3">Equipe</label>
-                  <div className="relative">
-                    <select
-                      value={selectedTeam}
-                      onChange={(e) => setSelectedTeam(e.target.value)}
-                      className="appearance-none w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white font-semibold text-gray-700 hover:border-blue-300 cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
-                    >
-                      <option value="all" className="py-2">🏢 Todas as Equipes</option>
-                      {data.teams.map(team => (
-                        <option key={team.id} value={team.id} className="py-2">{team.name}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+      {/* Left Sidebar (Desktop) */}
+      <LeftSidebar />
 
-                {/* Filtro por Participante */}
-                <div className="relative">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 sm:mb-3">Participante</label>
-                  <div className="relative">
-                    <select
-                      value={selectedMember}
-                      onChange={(e) => setSelectedMember(e.target.value)}
-                      className="appearance-none w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white font-semibold text-gray-700 hover:border-blue-300 cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
-                    >
-                      <option value="all" className="py-2">👥 Todos os Participantes</option>
-                      {data.members.map(member => (
-                        <option key={member.id} value={member.id} className="py-2">
-                          {member.name || member.full_name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+      {/* Main Content */}
+      <div className="lg:ml-64 lg:mr-80">
+        {/* Stories */}
+        <Stories />
 
-                {/* Filtro por Tipo */}
-                <div className="relative">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 sm:mb-3">Tipo</label>
-                  <div className="relative">
-                    <select
-                      value={selectedMediaType}
-                      onChange={(e) => setSelectedMediaType(e.target.value)}
-                      className="appearance-none w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white font-semibold text-gray-700 hover:border-blue-300 cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
-                    >
-                      <option value="all" className="py-2">🎯 Todos os Tipos</option>
-                      <option value="image" className="py-2">📸 Fotos</option>
-                      <option value="video" className="py-2">🎥 Vídeos</option>
-                    </select>
-                    <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Filtro por Data */}
-                <div className="relative">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 sm:mb-3">Data</label>
-                  <div className="relative">
-                    <select
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="appearance-none w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white font-semibold text-gray-700 hover:border-blue-300 cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
-                    >
-                      <option value="all" className="py-2">📅 Todas as Datas</option>
-                      {[...new Set(data.media.map(m => corrigirFusoHorario(m.created_at)))].sort().reverse().slice(0, 10).map(date => (
-                        <option key={date} value={date} className="py-2">
-                          {new Date(date).toLocaleDateString('pt-BR')}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Estatísticas */}
-          <FitGramStats />
-
-          {/* Grid de Mídia */}
-          {filteredMedia.length === 0 ? (
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-8 sm:p-16 text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50"></div>
-              <div className="relative z-10">
-                <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">📸</div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-4">Nenhuma mídia encontrada</h3>
-                <p className="text-gray-600 text-base sm:text-lg">Tente ajustar os filtros para encontrar fotos e vídeos.</p>
-              </div>
+        {/* Feed */}
+        <div className="max-w-2xl mx-auto pb-20 lg:pb-0">
+          {feedMedia.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-4xl mb-4">📸</div>
+              <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Nenhum post encontrado</h3>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Tente ajustar sua busca ou verifique mais tarde.</p>
             </div>
           ) : (
-            <div className={`grid gap-4 sm:gap-8 ${
-              viewType === 'grid' 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1'
-            }`}>
-              {filteredMedia.map((mediaItem) => (
-                <FitGramCard key={mediaItem.id} mediaItem={mediaItem} />
+            <div>
+              {feedMedia.map((mediaItem) => (
+                <FeedPost key={mediaItem.id} mediaItem={mediaItem} />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Right Sidebar (Desktop) */}
+      <RightSidebar />
+
+      {/* Bottom Navigation (Mobile) */}
+      <BottomNavigation />
+
+      {/* Stories Modal */}
+      <StoriesModal />
     </div>
   );
 } 
