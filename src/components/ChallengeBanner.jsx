@@ -101,6 +101,10 @@ export default function ChallengeBanner({ challenge }) {
                       <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("Treino coletivo (aula, funcional, etc.) = **+3 pontos**") }} />
                     </div>
                     <div className="flex items-start gap-2">
+                      <span className="text-purple-300 mt-0.5 flex-shrink-0">🏆</span>
+                      <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("Treino coletivo especial (#coletivo6) = **+6 pontos**") }} />
+                    </div>
+                    <div className="flex items-start gap-2">
                       <span className="text-red-300 mt-0.5 flex-shrink-0">❌</span>
                       <span className="break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown("Caminhada leve, passeio com cachorro, etc. **não pontuam**") }} />
                     </div>
@@ -115,7 +119,7 @@ export default function ChallengeBanner({ challenge }) {
                     📸 Registre com foto e duração
                   </span>
                   <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full text-white/90 hover-lift text-xs">
-                    🏷️ Use #coletivo para treinos em grupo
+                    🏷️ Use #coletivo (3pts) ou #coletivo6 (6pts) para treinos em grupo
                   </span>
                   <span className="bg-white/20 backdrop-blur-sm px-1.5 sm:px-3 py-1 rounded-full text-white/90 hover-lift text-xs">
                     👥 Ranking individual e por grupo

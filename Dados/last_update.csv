@@ -1,2 +1,2 @@
-timestamp,updated_by,description
-07/08/2025 22:58:37,Sistema,Atualização automática baseada na data dos arquivos CSV
+timestamp,formatted_date
+2025-08-11T01:37:45.568Z,"10/08/2025, 22:37:45"

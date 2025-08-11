@@ -15,22 +15,30 @@ export default function AdvancedStats({
   // Função para calcular check-ins por tipo (coletivo vs individual)
   const getCheckinsByType = () => {
     let coletivos = 0;
+    let coletivos6 = 0;
     let individuais = 0;
 
     checkins.forEach(checkin => {
+      const isColetivo6 = (checkin.description && checkin.description.includes("#coletivo6")) ||
+                          (checkin.notes && checkin.notes.includes("#coletivo6")) ||
+                          (checkin.hashtag && checkin.hashtag.includes("#coletivo6")) ||
+                          (checkin.tags && checkin.tags.includes("#coletivo6"));
+      
       const isColetivo = (checkin.description && checkin.description.includes("#coletivo")) ||
                          (checkin.notes && checkin.notes.includes("#coletivo")) ||
                          (checkin.hashtag && checkin.hashtag.includes("#coletivo")) ||
                          (checkin.tags && checkin.tags.includes("#coletivo"));
 
-      if (isColetivo) {
+      if (isColetivo6) {
+        coletivos6++;
+      } else if (isColetivo) {
         coletivos++;
       } else {
         individuais++;
       }
     });
 
-    return { coletivos, individuais };
+    return { coletivos, coletivos6, individuais };
   };
 
   // Função para calcular participantes que não falharam nenhum dia
@@ -110,15 +118,34 @@ export default function AdvancedStats({
       const membrosDaEquipe = teamMemberships.filter(tm => String(tm.team_id) === String(team.id));
       const participantesAtivos = new Set();
       
+      // Debug: Log para equipe "Dados e Indicadores"
+      if (team.name?.trim() === "Dados e Indicadores") {
+        console.log(`🔍 Debug Equipe "${team.name}":`);
+        console.log(`   - Team ID: ${team.id}`);
+        console.log(`   - Membros da equipe:`, membrosDaEquipe);
+        console.log(`   - Total de membros: ${membrosDaEquipe.length}`);
+      }
+      
       membrosDaEquipe.forEach(membership => {
         const temCheckins = checkins.some(c => String(c.account_id) === String(membership.account_id));
         if (temCheckins) {
           participantesAtivos.add(String(membership.account_id));
         }
+        
+        // Debug: Log para equipe "Dados e Indicadores"
+        if (team.name?.trim() === "Dados e Indicadores") {
+          console.log(`   - Membro ${membership.account_id}: ${temCheckins ? '✅ Tem check-ins' : '❌ Sem check-ins'}`);
+        }
       });
 
       const tamanhoEsperado = TAMANHO_EQUIPE[team.name?.trim()] || membrosDaEquipe.length;
       const ativos = participantesAtivos.size;
+
+      // Debug: Log para equipe "Dados e Indicadores"
+      if (team.name?.trim() === "Dados e Indicadores") {
+        console.log(`   - Participantes ativos: ${ativos}/${tamanhoEsperado}`);
+        console.log(`   - Percentual: ${tamanhoEsperado > 0 ? ((ativos / tamanhoEsperado) * 100).toFixed(1) : 0}%`);
+      }
 
       return {
         nome: team.name,
@@ -259,17 +286,21 @@ export default function AdvancedStats({
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-laranja-600/10 to-transparent rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Coletivos</span>
+              <span className="text-sm font-medium text-gray-700">Coletivos (3pts)</span>
               <span className="font-bold text-laranja-600 text-lg">{checkinsByType.coletivos}</span>
             </div>
+            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-600/10 to-transparent rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Coletivos6 (6pts)</span>
+              <span className="font-bold text-purple-600 text-lg">{checkinsByType.coletivos6}</span>
+            </div>
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-azul-600/10 to-transparent rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Individuais</span>
+              <span className="text-sm font-medium text-gray-700">Individuais (1pt)</span>
               <span className="font-bold text-azul-600 text-lg">{checkinsByType.individuais}</span>
             </div>
             <div className="border-t border-gray-200 pt-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-bold text-gray-800">Total</span>
-                <span className="font-bold text-verde-600 text-xl">{checkinsByType.coletivos + checkinsByType.individuais}</span>
+                <span className="font-bold text-verde-600 text-xl">{checkinsByType.coletivos + checkinsByType.coletivos6 + checkinsByType.individuais}</span>
               </div>
             </div>
           </div>

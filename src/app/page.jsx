@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import LeaderboardCard from "../components/LeaderboardCard";
 import TeamStats from "../components/TeamStats";
+import PunicoesSummary from "../components/PunicoesSummary";
 import ActivityChart from "../components/ActivityChart";
 import Layout from "../components/Layout";
 import ChallengeBanner from "../components/ChallengeBanner";
@@ -34,6 +35,7 @@ export default function Home() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [coletivos, setColetivos] = useState([]);
+  const [manualActivities, setManualActivities] = useState([]);
 
   useEffect(() => {
     if (!showSplash) return;
@@ -44,7 +46,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, t, c, a, tm, med, com, reac, chal, col] = await Promise.all([
+      const [m, t, c, a, tm, med, com, reac, chal, col, ma] = await Promise.all([
         fetch("/api/members").then(res => res.json()),
         fetch("/api/teams").then(res => res.json()),
         fetch("/api/checkins").then(res => res.json()),
@@ -60,6 +62,7 @@ export default function Home() {
           console.log('API coletivos - dados:', data);
           return data;
         }),
+        fetch("/api/manual-activities").then(res => res.json()),
       ]);
       setMembers(m);
       setTeams(t);
@@ -74,6 +77,7 @@ export default function Home() {
       console.log('Página principal - coletivos é array?', Array.isArray(col));
       console.log('Página principal - coletivos length:', col?.length);
       setColetivos(col);
+      setManualActivities(ma);
       
       // Lê diretamente o arquivo last_update.csv
       try {
@@ -141,8 +145,17 @@ export default function Home() {
         challenge={challenge[0]}
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities} coletivos={coletivos}/>
+        <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities} coletivos={coletivos} manualActivities={manualActivities}/>
         <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
+      </div>
+      
+      {/* Seção de Punições */}
+      <div className="mt-6">
+        <PunicoesSummary 
+          teams={teams} 
+          members={members} 
+          teamMemberships={teamMemberships} 
+        />
       </div>
       
       {/* Botões de Ação */}
@@ -182,7 +195,7 @@ export default function Home() {
       
       {/* Novos Cards de Ranking */}
       <div className="mt-6">
-        <RankingCards members={members} checkins={checkins} checkInActivities={checkInActivities} />
+        <RankingCards members={members} checkins={checkins} checkInActivities={checkInActivities} manualActivities={manualActivities} />
       </div>
       
       {/* Modal de Treino Coletivo */}

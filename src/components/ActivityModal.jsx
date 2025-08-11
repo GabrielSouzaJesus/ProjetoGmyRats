@@ -43,12 +43,16 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
     setIsLoading(true);
     
     try {
+      // Converter a data selecionada (formato DD/MM/YYYY) para ISO string
+      const [day, month, year] = selectedDate.split('/');
+      const selectedDateISO = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toISOString();
+      
       const activityData = {
         member_id: member.id,
         member_name: member.name || member.full_name,
         activity_type: selectedActivity === 'custom' ? customActivity.trim() : selectedActivity,
         activity_label: selectedActivity === 'custom' ? customActivity.trim() : activities.find(a => a.value === selectedActivity)?.label,
-        created_at: new Date().toISOString(),
+        created_at: selectedDateISO,
         source: 'manual'
       };
 
@@ -65,11 +69,6 @@ const ActivityModal = ({ isOpen, onClose, onSave, member, selectedDate }) => {
         onClose();
         setSelectedActivity('');
         setCustomActivity('');
-        
-        // Recarregar os dados após um breve delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
       } else {
         alert('Erro ao cadastrar atividade');
       }

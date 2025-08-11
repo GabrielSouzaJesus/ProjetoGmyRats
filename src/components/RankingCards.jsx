@@ -1,27 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { TrophyIcon, FireIcon, BoltIcon } from '@heroicons/react/24/solid';
 
-const RankingCards = ({ members, checkins, checkInActivities = [] }) => {
+const RankingCards = ({ members, checkins, checkInActivities = [], manualActivities = [] }) => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showVarietyModal, setShowVarietyModal] = useState(false);
-  const [manualActivities, setManualActivities] = useState([]);
-
-  // Carregar atividades manuais
-  useEffect(() => {
-    const fetchManualActivities = async () => {
-      try {
-        const response = await fetch('/api/manual-activities');
-        if (response.ok) {
-          const data = await response.json();
-          setManualActivities(data);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar atividades manuais:', error);
-      }
-    };
-
-    fetchManualActivities();
-  }, []);
 
   // Mapeamento de traduções para tipos de atividades
   const activityTranslations = {

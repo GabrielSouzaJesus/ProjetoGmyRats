@@ -17,6 +17,20 @@ module.exports = {
         'azul-600': '#2563eb',  // Tailwind blue-600
         'laranja-600': '#ea580c', // Tailwind orange-600
       },
+      fontFamily: {
+        'display': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        'body': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        'ui': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
+      fontWeight: {
+        'display': '300',
+        'body': '400',
+        'ui': '500',
+      },
+      letterSpacing: {
+        'display': '-0.02em',
+        'ui': '0.01em',
+      },
     },
   },
   plugins: [],

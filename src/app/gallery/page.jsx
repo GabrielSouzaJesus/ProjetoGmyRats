@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { corrigirFusoHorario } from '../../lib/utils';
+
+// Import direto dos componentes para resolver problemas de módulo
+import ModernStories from '../../components/ModernStories';
+import ModernFeedPost from '../../components/ModernFeedPost';
+import ModernSidebar from '../../components/ModernSidebar';
+import ModernHeader from '../../components/ModernHeader';
 
 export default function GalleryPage() {
   const [data, setData] = useState({
@@ -30,83 +36,100 @@ export default function GalleryPage() {
     profilePic: null
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [media, members, checkins, comments, reactions, teams, teamMemberships] = await Promise.all([
-          fetch('/api/check_in_media').then(res => res.json()),
-          fetch('/api/members').then(res => res.json()),
-          fetch('/api/checkins').then(res => res.json()),
-          fetch('/api/comments').then(res => res.json()),
-          fetch('/api/reactions').then(res => res.json()),
-          fetch('/api/teams').then(res => res.json()),
-          fetch('/api/team_memberships').then(res => res.json())
-        ]);
+  // Carregamento progressivo das APIs
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadedData, setLoadedData] = useState({});
 
-        setData({
-          media,
-          members,
-          checkins,
-          comments,
-          reactions,
-          teams,
-          teamMemberships,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setData(prev => ({ ...prev, loading: false }));
+  useEffect(() => {
+    const fetchDataProgressively = async () => {
+      const apis = [
+        { key: 'media', url: '/api/check_in_media' },
+        { key: 'members', url: '/api/members' },
+        { key: 'checkins', url: '/api/checkins' },
+        { key: 'comments', url: '/api/comments' },
+        { key: 'reactions', url: '/api/reactions' },
+        { key: 'teams', url: '/api/teams' },
+        { key: 'teamMemberships', url: '/api/team_memberships' }
+      ];
+
+      let allData = {};
+
+      for (let i = 0; i < apis.length; i++) {
+        try {
+          const response = await fetch(apis[i].url);
+          const result = await response.json();
+          
+          allData[apis[i].key] = result;
+          setLoadedData(prev => ({ ...prev, [apis[i].key]: result }));
+          setLoadingProgress(((i + 1) / apis.length) * 100);
+          
+          // Pequeno delay para permitir renderização progressiva
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Erro ao carregar ${apis[i].key}:`, error);
+          allData[apis[i].key] = [];
+        }
       }
+
+      // Quando todos os dados estiverem carregados
+      console.log('Dados carregados:', allData);
+      setData(prev => ({
+        ...prev,
+        ...allData,
+        loading: false
+      }));
     };
 
-    fetchData();
+    fetchDataProgressively();
   }, []);
 
-  // Função para obter informações do membro
-  const getMemberInfo = (memberId) => {
+  // Memoização das funções para evitar recálculos desnecessários
+  const getMemberInfo = useCallback((memberId) => {
     const member = data.members.find(m => String(m.id) === String(memberId));
     return member || { name: 'Participante', full_name: 'Participante' };
-  };
+  }, [data.members]);
 
-  // Função para obter informações do check-in
-  const getCheckinInfo = (workoutId) => {
+  const getCheckinInfo = useCallback((workoutId) => {
     const checkin = data.checkins.find(c => String(c.id) === String(workoutId));
     return checkin;
-  };
+  }, [data.checkins]);
 
-  // Função para obter comentários de uma mídia
-  const getMediaComments = (workoutId) => {
+  const getMediaComments = useCallback((workoutId) => {
     return data.comments.filter(c => String(c.workout_id) === String(workoutId));
-  };
+  }, [data.comments]);
 
-  // Função para obter reações de uma mídia
-  const getMediaReactions = (workoutId) => {
+  const getMediaReactions = useCallback((workoutId) => {
     return data.reactions.filter(r => String(r.workout_id) === String(workoutId));
-  };
+  }, [data.reactions]);
 
-  // Filtrar mídia das últimas 12 horas para stories
-  const getRecentMedia = () => {
+  // Memoização dos dados filtrados
+  const recentMedia = useMemo(() => {
+    console.log('Filtrando recentMedia:', data.media);
+    if (!data.media.length) return [];
+    
     const now = new Date();
     const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
     
-    return data.media.filter(m => {
+    const filtered = data.media.filter(m => {
       const mediaDate = new Date(m.created_at);
       return mediaDate >= twelveHoursAgo;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  };
+    
+    console.log('recentMedia filtrado:', filtered);
+    return filtered;
+  }, [data.media]);
 
-  // Filtrar mídia para o feed
-  const getFeedMedia = () => {
+  const feedMedia = useMemo(() => {
+    console.log('Filtrando feedMedia:', { media: data.media, checkins: data.checkins, members: data.members });
+    
     let filtered = data.media;
 
-    // Se um membro específico foi selecionado, filtrar apenas suas mídias
     if (selectedMember) {
       const memberCheckins = data.checkins.filter(c => String(c.account_id) === String(selectedMember.id));
       const memberWorkoutIds = memberCheckins.map(c => String(c.id));
       filtered = filtered.filter(m => memberWorkoutIds.includes(String(m.workout_id)));
     }
 
-    // Se há busca, filtrar por nome do membro
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
       const matchingMembers = data.members.filter(m => 
@@ -118,11 +141,13 @@ export default function GalleryPage() {
       filtered = filtered.filter(m => matchingWorkoutIds.includes(String(m.workout_id)));
     }
 
-    return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  };
+    const sorted = filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    console.log('feedMedia filtrado:', sorted);
+    return sorted;
+  }, [data.media, data.checkins, data.members, selectedMember, searchQuery]);
 
   // Função para alternar like
-  const toggleLike = (mediaId) => {
+  const toggleLike = useCallback((mediaId) => {
     setLikedPosts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(mediaId)) {
@@ -132,7 +157,7 @@ export default function GalleryPage() {
       }
       return newSet;
     });
-  };
+  }, []);
 
   // Componente: Header Mobile
   const MobileHeader = () => {
@@ -172,259 +197,6 @@ export default function GalleryPage() {
     );
   };
 
-  // Componente: Sidebar Esquerda (Desktop)
-  const LeftSidebar = () => {
-    const navItems = [
-      { icon: '🏠', label: 'Página inicial', active: true },
-      { icon: '🔍', label: 'Pesquisa', active: false },
-      { icon: '🧭', label: 'Explorar', active: false },
-      { icon: '▶️', label: 'Reels', active: false },
-      { icon: '💬', label: 'Mensagens', active: false, badge: 3 },
-      { icon: '❤️', label: 'Notificações', active: false },
-      { icon: '➕', label: 'Criar', active: false },
-      { icon: '📊', label: 'Painel', active: false },
-      { icon: '👤', label: 'Perfil', active: false },
-      { icon: '☰', label: 'Mais', active: false }
-    ];
-
-    return (
-      <div className={`hidden lg:block w-64 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} h-screen fixed left-0 top-0 p-4 border-r ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-        {/* Logo */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">FitGram</h1>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar pessoas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full px-3 py-2 ${darkMode ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' : 'bg-gray-100 border-gray-300 text-black placeholder-gray-500'} border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="space-y-2">
-          {navItems.map((item, index) => (
-            <div key={index} className="relative">
-              <button
-                className={`w-full flex items-center space-x-4 px-3 py-2 rounded-lg transition-colors ${
-                  item.active 
-                    ? darkMode ? 'bg-gray-800' : 'bg-gray-100'
-                    : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="text-sm font-medium">{item.label}</span>
-                {item.badge && (
-                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            </div>
-          ))}
-        </nav>
-
-        {/* Back to Dashboard */}
-        <div className="mt-8 pt-8 border-t border-gray-800">
-          <Link
-            href="/"
-            className="flex items-center space-x-4 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-blue-400"
-          >
-            <span className="text-xl">⬅️</span>
-            <span className="text-sm font-medium">Voltar ao Dashboard</span>
-          </Link>
-        </div>
-      </div>
-    );
-  };
-
-  // Componente: Stories
-  const Stories = () => {
-    const recentMedia = getRecentMedia();
-    const uniqueMembers = [...new Set(recentMedia.map(m => {
-      const checkin = getCheckinInfo(m.workout_id);
-      return checkin ? checkin.account_id : null;
-    }))].filter(id => id !== null);
-
-    if (uniqueMembers.length === 0) return null;
-
-    return (
-      <div className={`${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border-b p-4`}>
-        <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
-          {/* Seu story */}
-          <div className="flex flex-col items-center space-y-1 flex-shrink-0 cursor-pointer">
-            <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-              <div className={`w-full h-full rounded-full ${darkMode ? 'bg-black' : 'bg-white'} p-0.5`}>
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                  {currentUser.name[0].toUpperCase()}
-                </div>
-              </div>
-            </div>
-            <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} truncate max-w-16`}>
-              Seu story
-            </span>
-          </div>
-
-          {uniqueMembers.slice(0, 10).map((memberId, index) => {
-            const member = getMemberInfo(memberId);
-            const memberMedia = recentMedia.filter(m => {
-              const checkin = getCheckinInfo(m.workout_id);
-              return checkin && String(checkin.account_id) === String(memberId);
-            });
-
-            return (
-              <div 
-                key={memberId}
-                className="flex flex-col items-center space-y-1 flex-shrink-0 cursor-pointer"
-                onClick={() => {
-                  setSelectedMember(member);
-                  setShowStories(true);
-                  setCurrentStoryIndex(0);
-                }}
-              >
-                <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-                  <div className={`w-full h-full rounded-full ${darkMode ? 'bg-black' : 'bg-white'} p-0.5`}>
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                      {(member.name || member.full_name || '?')[0].toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-                <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} truncate max-w-16`}>
-                  {member.name || member.full_name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // Componente: Post do Feed
-  const FeedPost = ({ mediaItem }) => {
-    const checkin = getCheckinInfo(mediaItem.workout_id);
-    const member = checkin ? getMemberInfo(checkin.account_id) : null;
-    const comments = getMediaComments(mediaItem.workout_id);
-    const reactions = getMediaReactions(mediaItem.workout_id);
-    const isVideo = mediaItem.medium_type?.includes('video');
-    const isLiked = likedPosts.has(mediaItem.id);
-    const totalLikes = reactions.length + (isLiked ? 1 : 0);
-
-    if (!member) return null;
-
-    return (
-      <div className={`${darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'} border mb-4`}>
-        {/* Header do Post */}
-        <div className="flex items-center justify-between p-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-              {(member.name || member.full_name || '?')[0].toUpperCase()}
-            </div>
-            <div>
-              <p className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-black'}`}>{member.name || member.full_name}</p>
-              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {new Date(mediaItem.created_at).toLocaleDateString('pt-BR')}
-              </p>
-            </div>
-          </div>
-          <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mídia */}
-        <div className="relative">
-          {isVideo ? (
-            <video
-              src={mediaItem.url}
-              poster={mediaItem.thumbnail_url}
-              className="w-full aspect-square object-cover"
-              controls
-            />
-          ) : (
-            <img
-              src={mediaItem.url}
-              alt={`Treino de ${member.name || member.full_name}`}
-              className="w-full aspect-square object-cover"
-              loading="lazy"
-            />
-          )}
-        </div>
-
-        {/* Ações */}
-        <div className="p-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => toggleLike(mediaItem.id)}
-                className={`transition-all duration-200 ${
-                  isLiked ? 'text-red-500' : darkMode ? 'text-gray-400 hover:text-red-500' : 'text-gray-400 hover:text-red-500'
-                }`}
-              >
-                <svg className={`w-6 h-6 ${isLiked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-              <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </button>
-              <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                </svg>
-              </button>
-            </div>
-            <button className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Likes */}
-          {totalLikes > 0 && (
-            <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{totalLikes} curtidas</p>
-          )}
-
-          {/* Comentários */}
-          {comments.length > 0 && (
-            <div className="space-y-1 mb-2">
-              {comments.slice(0, 2).map((comment, index) => (
-                <p key={index} className={`text-sm ${darkMode ? 'text-white' : 'text-black'}`}>
-                  <span className="font-semibold">{getMemberInfo(comment.account_id)?.name || getMemberInfo(comment.account_id)?.full_name}</span>
-                  <span className="ml-2">{comment.text}</span>
-                </p>
-              ))}
-              {comments.length > 2 && (
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} cursor-pointer`}>
-                  Ver todos os {comments.length} comentários
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Timestamp */}
-          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-            {new Date(mediaItem.created_at).toLocaleDateString('pt-BR')}
-          </p>
-        </div>
-      </div>
-    );
-  };
-
   // Componente: Bottom Navigation (Mobile)
   const BottomNavigation = () => {
     const navItems = [
@@ -456,87 +228,11 @@ export default function GalleryPage() {
     );
   };
 
-  // Componente: Sidebar Direita (Desktop)
-  const RightSidebar = () => {
-    const suggestions = data.members.slice(0, 5);
-
-    return (
-      <div className={`hidden lg:block w-80 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} h-screen fixed right-0 top-0 p-4 border-l ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-        {/* Current User */}
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
-            {currentUser.name[0].toUpperCase()}
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-sm">{currentUser.name}</p>
-            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{currentUser.fullName}</p>
-          </div>
-          <button className="text-blue-400 text-xs font-semibold">Mudar</button>
-        </div>
-
-        {/* Suggestions */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Sugestões para você</h3>
-            <button className={`text-xs ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}>Ver tudo</button>
-          </div>
-          
-          <div className="space-y-3">
-            {suggestions.map((member, index) => (
-              <div key={member.id} className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                  {(member.name || member.full_name || '?')[0].toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{member.name || member.full_name}</p>
-                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Seguido(a) por outros</p>
-                </div>
-                <button className="text-blue-400 text-xs font-semibold">Seguir</button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer Links */}
-        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} space-y-2`}>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sobre</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Ajuda</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Imprensa</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>API</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Carreiras</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Privacidade</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Termos</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Localizações</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Idioma</a>
-            <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Meta Verified</a>
-          </div>
-          <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>© 2025 FITGRAM FROM GYMRATS</p>
-        </div>
-
-        {/* Floating Message Bar */}
-        <div className={`absolute bottom-4 right-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg p-3 shadow-lg`}>
-          <div className="flex items-center space-x-2">
-            <span className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-black'}`}>Mensagens</span>
-            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">3</span>
-          </div>
-          <div className="flex space-x-1 mt-2">
-            {suggestions.slice(0, 3).map((member, index) => (
-              <div key={index} className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                {(member.name || member.full_name || '?')[0].toUpperCase()}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Componente: Modal de Stories
   const StoriesModal = () => {
     if (!showStories || !selectedMember) return null;
 
-    const memberMedia = getRecentMedia().filter(m => {
+    const memberMedia = recentMedia.filter(m => {
       const checkin = getCheckinInfo(m.workout_id);
       return checkin && String(checkin.account_id) === String(selectedMember.id);
     });
@@ -623,55 +319,156 @@ export default function GalleryPage() {
     );
   };
 
+  // Loading com progresso
   if (data.loading) {
     return (
-      <div className={`flex items-center justify-center h-screen ${darkMode ? 'bg-black' : 'bg-white'}`}>
-        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <div className={`flex flex-col items-center justify-center h-screen ${darkMode ? 'bg-black' : 'bg-white'}`}>
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+        <div className="w-64 bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${loadingProgress}%` }}
+          ></div>
+        </div>
+        <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Carregando... {Math.round(loadingProgress)}%
+        </p>
       </div>
     );
   }
 
-  const feedMedia = getFeedMedia();
-
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-black' : 'bg-white'}`}>
-      {/* Mobile Header */}
-      <MobileHeader />
-
-      {/* Left Sidebar (Desktop) */}
-      <LeftSidebar />
-
-      {/* Main Content */}
-      <div className="lg:ml-64 lg:mr-80">
-        {/* Stories */}
-        <Stories />
-
-        {/* Feed */}
-        <div className="max-w-2xl mx-auto pb-20 lg:pb-0">
-          {feedMedia.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="text-4xl mb-4">📸</div>
-              <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Nenhum post encontrado</h3>
-              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Tente ajustar sua busca ou verifique mais tarde.</p>
-            </div>
-          ) : (
-            <div>
-              {feedMedia.map((mediaItem) => (
-                <FeedPost key={mediaItem.id} mediaItem={mediaItem} />
-              ))}
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      {/* Header Moderno */}
+      <ModernHeader 
+        darkMode={darkMode} 
+        setDarkMode={setDarkMode} 
+        currentUser={currentUser}
+        setShowStories={setShowStories}
+        recentMedia={recentMedia}
+      />
+      
+      {/* Conteúdo Principal */}
+      <div className="flex pt-16">
+        {/* Sidebar Esquerda */}
+        <div className="hidden lg:block">
+          <ModernSidebar 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery} 
+            darkMode={darkMode}
+            members={data.members}
+            selectedMember={selectedMember}
+            setSelectedMember={setSelectedMember}
+          />
+        </div>
+        
+        {/* Feed Principal */}
+        <div className="flex-1 lg:ml-0">
+          {/* Stories */}
+          {recentMedia.length > 0 && (
+            <div className="p-6">
+              <div className="max-w-4xl mx-auto">
+                <h2 className={`text-2xl font-display mb-6 ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Stories Recentes
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {recentMedia.slice(0, 6).map((mediaItem, index) => {
+                    const checkin = getCheckinInfo(mediaItem.workout_id);
+                    const member = checkin ? getMemberInfo(checkin.account_id) : null;
+                    return (
+                      <button
+                        key={mediaItem.id}
+                        onClick={() => {
+                          setCurrentStoryIndex(index);
+                          setShowStories(true);
+                        }}
+                        className="group relative aspect-square rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                      >
+                        <img
+                          src={mediaItem.url}
+                          alt="Story"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute bottom-2 left-2 right-2 text-white text-center">
+                            <p className="text-xs font-medium truncate">
+                              {member?.name || 'Participante'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="absolute top-2 left-2 w-3 h-3 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full"></div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
+          
+          {/* Feed de Posts */}
+          <div className="max-w-2xl mx-auto px-6 pb-20">
+            {feedMedia.length > 0 ? (
+              feedMedia.map((mediaItem) => (
+                <ModernFeedPost
+                  key={mediaItem.id}
+                  mediaItem={mediaItem}
+                  getCheckinInfo={getCheckinInfo}
+                  getMemberInfo={getMemberInfo}
+                  getMediaComments={getMediaComments}
+                  getMediaReactions={getMediaReactions}
+                  likedPosts={likedPosts}
+                  toggleLike={toggleLike}
+                  darkMode={darkMode}
+                  currentUser={currentUser}
+                />
+              ))
+            ) : (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className={`text-xl font-display ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                } mb-3`}>
+                  Nenhum post encontrado
+                </h3>
+                <p className={`text-lg ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Tente ajustar sua busca ou verifique mais tarde.
+                </p>
+                <div className="mt-6">
+                  <button className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+                    darkMode 
+                      ? 'bg-blue-600 hover:bg-blue-600 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}>
+                    Explorar Comunidade
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Right Sidebar (Desktop) */}
-      <RightSidebar />
-
-      {/* Bottom Navigation (Mobile) */}
-      <BottomNavigation />
-
-      {/* Stories Modal */}
-      <StoriesModal />
+      
+      {/* Modal de Stories */}
+      {showStories && (
+        <ModernStories
+          recentMedia={recentMedia}
+          getCheckinInfo={getCheckinInfo}
+          getMemberInfo={getMemberInfo}
+          setSelectedMember={setSelectedMember}
+          setShowStories={setShowStories}
+          setCurrentStoryIndex={setCurrentStoryIndex}
+          darkMode={darkMode}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 } 

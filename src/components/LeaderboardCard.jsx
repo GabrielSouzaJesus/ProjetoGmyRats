@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { corrigirFusoHorario } from "../lib/utils";
 import ActivityModal from './ActivityModal';
 
-function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
+function getMemberScoreWithRules(memberId, checkins, checkInActivities, manualActivities = []) {
   // IMPORTANTE: Nova regra de pontuação (2025)
   // - Treino individual: 1 ponto
   // - Treino coletivo (#coletivo): 1 ponto (não mais 3 pontos)
@@ -38,6 +38,14 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
   Object.values(checkinsByDay).forEach(dayCheckins => {
     let diaTemColetivo = false;
     let diaTemIndividual = false;
+    
+    // Verificar se há atividades manuais neste dia
+    const dayDate = Object.keys(checkinsByDay).find(date => checkinsByDay[date] === dayCheckins);
+    const manualActivitiesForDay = manualActivities.filter(activity => {
+      if (!activity.created_at) return false;
+      const activityDate = corrigirFusoHorario(activity.created_at);
+      return activityDate === dayDate;
+    });
 
     for (const checkin of dayCheckins) {
       // Busca atividades desse check-in
@@ -68,13 +76,22 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
         break;
       }
       
-      // Verifica se é coletivo normal
+      // Verifica se é coletivo6 (6 pontos)
+      const isColetivo6 = (checkin.description && checkin.description.includes("#coletivo6")) ||
+                          (checkin.notes && checkin.notes.includes("#coletivo6")) ||
+                          (checkin.hashtag && checkin.hashtag.includes("#coletivo6")) ||
+                          (checkin.tags && checkin.tags.includes("#coletivo6"));
+
+      // Verifica se é coletivo normal (3 pontos)
       const isColetivo = (checkin.description && checkin.description.includes("#coletivo")) ||
                          (checkin.notes && checkin.notes.includes("#coletivo")) ||
                          (checkin.hashtag && checkin.hashtag.includes("#coletivo")) ||
                          (checkin.tags && checkin.tags.includes("#coletivo"));
 
-      if (isColetivo && durationMinutes >= 40) {
+      if (isColetivo6 && durationMinutes >= 40) {
+        diaTemColetivo = true;
+        break; // já achou coletivo, não precisa olhar mais nada no dia
+      } else if (isColetivo && durationMinutes >= 40) {
         diaTemColetivo = true;
         break; // já achou coletivo, não precisa olhar mais nada no dia
       } else if (durationMinutes >= 40) {
@@ -82,11 +99,9 @@ function getMemberScoreWithRules(memberId, checkins, checkInActivities) {
       }
     }
 
-    // Nova regra: coletivo conta apenas 1 ponto no ranking individual
-    if (diaTemColetivo) {
-      total += 1; // Mudança: coletivo agora conta apenas 1 ponto no individual
-    } else if (diaTemIndividual) {
-      total += 1;
+    // Ranking individual: 1 ponto por dia com treino válido (independente do tipo)
+    if (diaTemColetivo || diaTemIndividual || manualActivitiesForDay.length > 0) {
+      total += 1; // Sempre 1 ponto por dia com treino válido
     }
     // Se não teve treino válido, não soma nada
   });
@@ -101,7 +116,7 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export default function LeaderboardCard({ members = [], checkins = [], checkInActivities = [], coletivos = [] }) {
+export default function LeaderboardCard({ members = [], checkins = [], checkInActivities = [], coletivos = [], manualActivities = [] }) {
   const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [showAllParticipants, setShowAllParticipants] = useState(false);
@@ -109,11 +124,17 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   const [selectedMemberForActivity, setSelectedMemberForActivity] = useState(null);
   const [selectedDateForActivity, setSelectedDateForActivity] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [localManualActivities, setLocalManualActivities] = useState(manualActivities);
   
   // Loga os dados recebidos
   console.log("LeaderboardCard - members:", members);
   console.log("LeaderboardCard - checkins:", checkins);
   console.log("LeaderboardCard - checkInActivities:", checkInActivities);
+  
+  // Atualizar estado local quando as props mudarem
+  useEffect(() => {
+    setLocalManualActivities(manualActivities);
+  }, [manualActivities]);
 
   function getMemberScore(memberId, checkins, checkInActivities) {
     const memberCheckIns = checkins.filter(c => String(c.account_id) === String(memberId));
@@ -165,9 +186,9 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
   const allRanking = members
     .map(m => ({
       ...m,
-      individualScore: getMemberScoreWithRules(m.id, checkins, checkInActivities),
+      individualScore: getMemberScoreWithRules(m.id, checkins, checkInActivities, localManualActivities),
       coletivoScore: getColetivoScore(m.id, coletivos),
-      total: getMemberScoreWithRules(m.id, checkins, checkInActivities) + getColetivoScore(m.id, coletivos)
+      total: getMemberScoreWithRules(m.id, checkins, checkInActivities, localManualActivities) + getColetivoScore(m.id, coletivos)
     }))
     .filter(m => m.total > 0)
     .filter(m => !search || (m.name || m.full_name || "").toLowerCase().includes(search.toLowerCase()))
@@ -287,10 +308,17 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
         }
       }
       
+      // Verificar se há atividades manuais neste dia
+      const manualActivitiesForDay = localManualActivities.filter(activity => {
+        if (!activity.created_at) return false;
+        const activityDate = corrigirFusoHorario(activity.created_at);
+        return activityDate === date;
+      });
+      
       let pontos = 0;
-      if (diaTemColetivo) pontos = 1; // Mudança: coletivo agora conta apenas 1 ponto no individual
+      if (diaTemColetivo || manualActivitiesForDay.length > 0) pontos = 1; // Coletivo ou atividades manuais = 1 ponto
       else if (diaTemIndividual) pontos = 1;
-      return { date, pontos, checkins: dayCheckins, temAtividadesRegistradas };
+      return { date, pontos, checkins: dayCheckins, temAtividadesRegistradas, manualActivities: manualActivitiesForDay };
     }).sort((a, b) => a.date.localeCompare(b.date));
     
     // Adicionar dias ignorados ao resultado
@@ -694,8 +722,38 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                         </div>
                       ))}
                       
+                      {/* Mostrar atividades manuais se existirem */}
+                      {dia.manualActivities && dia.manualActivities.length > 0 && (
+                        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-700">Atividades Manuais Cadastradas</p>
+                                <div className="space-y-1 mt-1">
+                                  {dia.manualActivities.map((activity, idx) => (
+                                    <div key={idx} className="text-xs text-gray-600">
+                                      • {activity.activity_label} ({activity.activity_type})
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-green-600 bg-green-200 px-2 py-1 rounded font-medium">
+                                ✓ Atividade Manual
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Botão para cadastrar atividade se não há atividades registradas */}
-                      {dia.checkins && dia.checkins.length > 0 && !dia.temAtividadesRegistradas && (
+                      {dia.checkins && dia.checkins.length > 0 && !dia.temAtividadesRegistradas && !dia.manualActivities?.length && (
                         <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
@@ -740,9 +798,16 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
             setSelectedMemberForActivity(null);
             setSelectedDateForActivity(null);
           }}
-          onSave={() => {
-            // Recarregar dados após cadastrar atividade
-            setRefreshKey(prev => prev + 1);
+          onSave={async () => {
+            // Recarregar apenas as atividades manuais
+            try {
+              const response = await fetch('/api/manual-activities');
+              const newManualActivities = await response.json();
+              // Atualizar o estado local das atividades manuais
+              setLocalManualActivities(newManualActivities);
+            } catch (error) {
+              console.error('Erro ao recarregar atividades manuais:', error);
+            }
             setShowActivityModal(false);
             setSelectedMemberForActivity(null);
             setSelectedDateForActivity(null);
