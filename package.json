@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "update-timestamp": "node update-timestamp.js",
-    "watch-data": "node update-timestamp.js --watch"
+    "watch-data": "node update-timestamp.js --watch",
+    "migrate-supabase": "node scripts/migrate-to-supabase.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
