@@ -7,7 +7,7 @@ export default function handler(req, res) {
     if (lastUpdateData && lastUpdateData.length > 0) {
       const lastUpdate = lastUpdateData[0];
       res.status(200).json({
-        timestamp: lastUpdate.timestamp || '25/07/2025 22:50:49',
+        timestamp: lastUpdate.formatted_date || lastUpdate.timestamp || '25/07/2025 22:50:49',
         updated_by: lastUpdate.updated_by || 'Sistema',
         description: lastUpdate.description || 'Atualização automática'
       });
