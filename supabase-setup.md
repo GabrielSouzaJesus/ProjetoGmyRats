@@ -28,9 +28,10 @@ O sistema atual usa arquivos CSV que funcionam apenas em desenvolvimento local. 
 - **Region**: Escolha a mais próxima (ex: São Paulo)
 - **Pricing Plan**: Free tier
 
-### 3. **Criar a Tabela**
+### 3. **Criar as Tabelas**
 Após criar o projeto, vá para **SQL Editor** e execute:
 
+#### **Tabela 1: Atividades Manuais**
 ```sql
 -- Criar tabela para atividades manuais
 CREATE TABLE manual_activities (
@@ -52,6 +53,43 @@ ALTER TABLE manual_activities ENABLE ROW LEVEL SECURITY;
 
 -- Política para permitir todas as operações (para simplificar)
 CREATE POLICY "Allow all operations" ON manual_activities
+  FOR ALL USING (true) WITH CHECK (true);
+```
+
+#### **Tabela 2: Treinos Coletivos**
+```sql
+-- Criar tabela para treinos coletivos
+CREATE TABLE coletivos (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  total_points INTEGER NOT NULL,
+  duration INTEGER DEFAULT 0,
+  photo_url TEXT,
+  team1 TEXT NOT NULL,
+  team2 TEXT NOT NULL,
+  team1_points INTEGER NOT NULL,
+  team2_points INTEGER NOT NULL,
+  team1_participants JSONB DEFAULT '[]',
+  team2_participants JSONB DEFAULT '[]',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  hashtag TEXT,
+  status TEXT DEFAULT 'pending',
+  approved_by TEXT,
+  approved_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Criar índices para performance
+CREATE INDEX idx_coletivos_created_at ON coletivos(created_at);
+CREATE INDEX idx_coletivos_status ON coletivos(status);
+CREATE INDEX idx_coletivos_team1 ON coletivos(team1);
+CREATE INDEX idx_coletivos_team2 ON coletivos(team2);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE coletivos ENABLE ROW LEVEL SECURITY;
+
+-- Política para permitir todas as operações (para simplificar)
+CREATE POLICY "Allow all operations" ON coletivos
   FOR ALL USING (true) WITH CHECK (true);
 ```
 
@@ -80,8 +118,9 @@ CREATE POLICY "Allow all operations" ON manual_activities
 
 ### 6. **Testar a Configuração**
 - Faça deploy no Vercel
-- Teste cadastrar uma atividade
-- Verifique se aparece na tabela do Supabase
+- Teste cadastrar uma atividade manual
+- Teste registrar um treino coletivo
+- Verifique se aparecem nas tabelas do Supabase
 
 ## 🔄 **Como Funciona Agora**
 
@@ -117,9 +156,14 @@ Após configurar, você pode:
 - Reinicie o servidor após adicionar variáveis
 
 **Erro de permissão**
-- Verifique se a tabela tem RLS habilitado
+- Verifique se as tabelas têm RLS habilitado
 - Confirme se a service role key está correta
 
 **Dados não aparecem**
 - Verifique logs do Vercel
-- Confirme se a tabela foi criada corretamente 
+- Confirme se as tabelas foram criadas corretamente
+
+**Erro ao criar tabelas**
+- Verifique se o SQL foi executado corretamente
+- Confirme se não há erros de sintaxe
+- Verifique se o projeto foi criado com sucesso 

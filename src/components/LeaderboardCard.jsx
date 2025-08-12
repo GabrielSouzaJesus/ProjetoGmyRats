@@ -751,6 +751,90 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
                           </div>
                         </div>
                       )}
+
+                      {/* Mostrar treinos coletivos se existirem (apenas para auditoria) */}
+                      {(() => {
+                        // Debug: Log para verificar se está funcionando
+                        console.log('=== DEBUG CHECKINS COLETIVOS ===');
+                        console.log('checkins recebidos:', checkins.length);
+                        console.log('selectedMember.id:', selectedMember.id);
+                        console.log('dia.date:', dia.date);
+                        
+                        // Buscar check-ins coletivos da pessoa neste dia
+                        const checkinsColetivosDoDia = checkins.filter(checkin => {
+                          // Verificar se é da pessoa
+                          if (String(checkin.account_id) !== String(selectedMember.id)) return false;
+                          
+                          // Verificar se é do mesmo dia
+                          const checkinDate = corrigirFusoHorario(checkin.occurred_at || checkin.created_at);
+                          if (checkinDate !== dia.date) return false;
+                          
+                          // Verificar se tem hashtag coletiva
+                          const hasColetivo = (checkin.description && checkin.description.includes("#coletivo")) ||
+                                            (checkin.notes && checkin.notes.includes("#coletivo")) ||
+                                            (checkin.hashtag && checkin.hashtag.includes("#coletivo")) ||
+                                            (checkin.tags && checkin.tags.includes("#coletivo")) ||
+                                            (checkin.title && checkin.title.includes("#coletivo"));
+                          
+                          const hasColetivo6 = (checkin.description && checkin.description.includes("#coletivo6")) ||
+                                             (checkin.notes && checkin.notes.includes("#coletivo6")) ||
+                                             (checkin.hashtag && checkin.hashtag.includes("#coletivo6")) ||
+                                             (checkin.tags && checkin.tags.includes("#coletivo6")) ||
+                                             (checkin.title && checkin.title.includes("#coletivo6"));
+                          
+                          if (hasColetivo || hasColetivo6) {
+                            console.log('Check-in coletivo encontrado:', checkin);
+                            console.log('hasColetivo:', hasColetivo);
+                            console.log('hasColetivo6:', hasColetivo6);
+                          }
+                          
+                          return hasColetivo || hasColetivo6;
+                        });
+
+                        console.log('checkinsColetivosDoDia encontrados:', checkinsColetivosDoDia);
+                        console.log('=== FIM DEBUG ===');
+
+                        if (checkinsColetivosDoDia.length === 0) return null;
+
+                        return (
+                          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-sm">🏆</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">Treinos Coletivos (Check-ins)</p>
+                                  <p className="text-xs text-gray-500">Pontuação destinada às equipes - não contabilizada no ranking individual</p>
+                                  <div className="space-y-1 mt-1">
+                                    {checkinsColetivosDoDia.map((checkin, idx) => {
+                                      const isColetivo6 = (checkin.description && checkin.description.includes("#coletivo6")) ||
+                                                        (checkin.notes && checkin.notes.includes("#coletivo6")) ||
+                                                        (checkin.hashtag && checkin.hashtag.includes("#coletivo6")) ||
+                                                        (checkin.tags && checkin.tags.includes("#coletivo6")) ||
+                                                        (checkin.title && checkin.title.includes("#coletivo6"));
+                                      
+                                      const pontosEquipe = isColetivo6 ? 6 : 3;
+                                      const titulo = checkin.title || checkin.description || checkin.notes || 'Treino coletivo';
+                                      
+                                      return (
+                                        <div key={idx} className="text-xs text-gray-600">
+                                          • {titulo} ({pontosEquipe}pts para equipe)
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-purple-600 bg-purple-200 px-2 py-1 rounded font-medium">
+                                  🏆 Coletivo
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       
                       {/* Botão para cadastrar atividade se não há atividades registradas */}
                       {dia.checkins && dia.checkins.length > 0 && !dia.temAtividadesRegistradas && !dia.manualActivities?.length && (
