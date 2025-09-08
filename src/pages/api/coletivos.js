@@ -93,6 +93,27 @@ function saveToCSV(coletivoData) {
   // Gerar ID único
   const id = Date.now().toString();
   
+  // Detectar se é nova estrutura (com teams) ou antiga (com team1/team2)
+  let team1, team2, team1_points, team2_points, team1_participants, team2_participants;
+  
+  if (coletivoData.teams && Array.isArray(coletivoData.teams)) {
+    // Nova estrutura - converter para antiga
+    team1 = coletivoData.teams[0]?.teamName || '';
+    team2 = coletivoData.teams[1]?.teamName || '';
+    team1_points = coletivoData.teams[0]?.points || 0;
+    team2_points = coletivoData.teams[1]?.points || 0;
+    team1_participants = coletivoData.teams[0]?.participants || [];
+    team2_participants = coletivoData.teams[1]?.participants || [];
+  } else {
+    // Estrutura antiga - usar diretamente
+    team1 = coletivoData.team1 || '';
+    team2 = coletivoData.team2 || '';
+    team1_points = coletivoData.team1_points || 0;
+    team2_points = coletivoData.team2_points || 0;
+    team1_participants = coletivoData.team1_participants || [];
+    team2_participants = coletivoData.team2_participants || [];
+  }
+  
   // Criar linha CSV
   const newColetivo = [
     id,
@@ -101,12 +122,12 @@ function saveToCSV(coletivoData) {
     coletivoData.total_points,
     coletivoData.duration,
     coletivoData.photo_url,
-    coletivoData.team1,
-    coletivoData.team2,
-    coletivoData.team1_points,
-    coletivoData.team2_points,
-    coletivoData.team1_participants.map(p => `${p.id}:${p.name}`).join('|'),
-    coletivoData.team2_participants.map(p => `${p.id}:${p.name}`).join('|'),
+    team1,
+    team2,
+    team1_points,
+    team2_points,
+    team1_participants.map(p => `${p.id}:${p.name}`).join('|'),
+    team2_participants.map(p => `${p.id}:${p.name}`).join('|'),
     coletivoData.created_at,
     coletivoData.hashtag,
     coletivoData.status,
@@ -409,13 +430,21 @@ export default async function handler(req, res) {
       if (files.photo && files.photo[0]) {
         console.log('Foto encontrada:', files.photo[0]);
         const photo = files.photo[0];
-        const fileName = `${id}_${Date.now()}_${photo.originalFilename}`;
-        const uploadPath = path.join(process.cwd(), 'public', 'uploads', fileName);
         
-        console.log('Movendo arquivo para:', uploadPath);
-        // Mover arquivo para pasta de uploads
-        fs.renameSync(photo.filepath, uploadPath);
-        photo_url = `/uploads/${fileName}`;
+        if (isProduction) {
+          // Em produção, usar URL temporária ou base64
+          console.log('Produção: usando URL temporária da foto');
+          photo_url = `/temp/${photo.originalFilename}`;
+        } else {
+          // Em desenvolvimento, salvar no sistema de arquivos
+          const fileName = `${id}_${Date.now()}_${photo.originalFilename}`;
+          const uploadPath = path.join(process.cwd(), 'public', 'uploads', fileName);
+          
+          console.log('Desenvolvimento: movendo arquivo para:', uploadPath);
+          // Mover arquivo para pasta de uploads
+          fs.renameSync(photo.filepath, uploadPath);
+          photo_url = `/uploads/${fileName}`;
+        }
         console.log('Foto processada:', photo_url);
       } else {
         console.log('Nenhuma foto encontrada');
@@ -449,8 +478,36 @@ export default async function handler(req, res) {
       const teamNamesForHashtag = teamsData.map(team => team.teamName.toLowerCase().replace(/\s+/g, '_')).join('_');
       const hashtag = `#coletivo_${teamNamesForHashtag}_${totalPointsValue}pts`;
 
-      // Dados do coletivo para salvar
+      // Converter dados da nova estrutura para a estrutura antiga do Supabase
+      const team1 = teamsData[0]?.teamName || '';
+      const team2 = teamsData[1]?.teamName || '';
+      const team1_points = teamsData[0]?.points || 0;
+      const team2_points = teamsData[1]?.points || 0;
+      const team1_participants = teamsData[0]?.participants || [];
+      const team2_participants = teamsData[1]?.participants || [];
+
+      // Dados do coletivo para salvar (estrutura compatível com Supabase)
       const coletivoData = {
+        title: titleValue,
+        description: descriptionValue || '',
+        total_points: parseInt(totalPointsValue),
+        duration: parseInt(durationValue) || 0,
+        photo_url,
+        team1,
+        team2,
+        team1_points,
+        team2_points,
+        team1_participants,
+        team2_participants,
+        hashtag,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        approved_by: '',
+        approved_at: ''
+      };
+
+      // Para CSV (desenvolvimento), manter a nova estrutura
+      const coletivoDataForCSV = {
         title: titleValue,
         description: descriptionValue || '',
         total_points: parseInt(totalPointsValue),
@@ -475,19 +532,24 @@ export default async function handler(req, res) {
         } catch (supabaseError) {
           console.error('Erro Supabase, tentando CSV como fallback:', supabaseError);
           // Fallback para CSV se Supabase falhar
-          coletivo = saveToCSV(coletivoData);
+          coletivo = saveToCSV(coletivoDataForCSV);
         }
       } else {
         // Desenvolvimento: usar CSV
         console.log('Salvando no CSV...');
-        coletivo = saveToCSV(coletivoData);
+        coletivo = saveToCSV(coletivoDataForCSV);
       }
 
       console.log('Enviando resposta de sucesso:', coletivo);
       res.status(201).json(coletivo);
     } catch (error) {
       console.error('Erro ao salvar coletivo:', error);
-      res.status(500).json({ error: 'Erro ao salvar treino coletivo' });
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ 
+        error: 'Erro ao salvar treino coletivo',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   } else if (req.method === 'PUT') {
     try {
