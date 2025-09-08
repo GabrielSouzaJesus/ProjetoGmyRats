@@ -339,6 +339,12 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  // Log inicial para debug
+  console.log('=== API COLETIVOS HANDLER INICIADO ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', req.headers);
+  
   // Determinar se estamos em produção ou desenvolvimento
   const isProduction = process.env.NODE_ENV === 'production';
   
@@ -710,7 +716,11 @@ export default async function handler(req, res) {
       res.status(500).json({ error: 'Erro ao atualizar status' });
     }
   } else {
+    console.log('=== MÉTODO NÃO SUPORTADO ===');
+    console.log('Método recebido:', req.method);
     res.setHeader('Allow', ['GET', 'POST', 'PUT']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
+  
+  console.log('=== API COLETIVOS HANDLER FINALIZADO ===');
 } 
