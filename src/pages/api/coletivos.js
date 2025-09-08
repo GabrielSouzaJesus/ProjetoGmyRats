@@ -668,12 +668,24 @@ export default async function handler(req, res) {
     console.log('Request headers:', req.headers);
     
     try {
-      console.log('=== PUT /api/coletivos ===');
-      console.log('Body recebido:', req.body);
+      // Parse manual do body para PUT
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
       
-      const { id, status, approved_by } = req.body;
+      req.on('end', async () => {
+        try {
+          console.log('Body raw:', body);
+          const parsedBody = JSON.parse(body);
+          console.log('Body parsed:', parsedBody);
+          
+          console.log('=== PUT /api/coletivos ===');
+          console.log('Body recebido:', parsedBody);
       
-      console.log('Dados extraídos:', { id, status, approved_by });
+          const { id, status, approved_by } = parsedBody;
+          
+          console.log('Dados extraídos:', { id, status, approved_by });
       
       if (!id || !status) {
         console.log('Erro: ID ou status faltando');
@@ -708,12 +720,19 @@ export default async function handler(req, res) {
       }
 
       res.status(200).json({ success: true, message: 'Status atualizado com sucesso' });
+        } catch (error) {
+          console.error('=== ERRO NA FUNÇÃO PUT ===');
+          console.error('Erro completo:', error);
+          console.error('Stack trace:', error.stack);
+          console.error('Message:', error.message);
+          res.status(500).json({ error: 'Erro ao atualizar status' });
+        }
+      });
+      
     } catch (error) {
-      console.error('=== ERRO NA FUNÇÃO PUT ===');
+      console.error('=== ERRO NO PARSE DO BODY ===');
       console.error('Erro completo:', error);
-      console.error('Stack trace:', error.stack);
-      console.error('Message:', error.message);
-      res.status(500).json({ error: 'Erro ao atualizar status' });
+      res.status(500).json({ error: 'Erro ao processar requisição' });
     }
   } else {
     console.log('=== MÉTODO NÃO SUPORTADO ===');
