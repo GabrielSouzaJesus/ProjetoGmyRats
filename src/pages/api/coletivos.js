@@ -657,6 +657,10 @@ export default async function handler(req, res) {
       });
     }
   } else if (req.method === 'PUT') {
+    console.log('=== PUT /api/coletivos - INÍCIO ===');
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+    
     try {
       console.log('=== PUT /api/coletivos ===');
       console.log('Body recebido:', req.body);
@@ -699,7 +703,10 @@ export default async function handler(req, res) {
 
       res.status(200).json({ success: true, message: 'Status atualizado com sucesso' });
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('=== ERRO NA FUNÇÃO PUT ===');
+      console.error('Erro completo:', error);
+      console.error('Stack trace:', error.stack);
+      console.error('Message:', error.message);
       res.status(500).json({ error: 'Erro ao atualizar status' });
     }
   } else {
