@@ -9,6 +9,36 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const coletivosFile = path.join(process.cwd(), 'Dados', 'coletivos.csv');
 const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
 
+// Função para salvar foto no Supabase Storage
+async function uploadPhotoToSupabase(photoFile, fileName) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Configuração do Supabase não encontrada');
+  }
+
+  // Converter arquivo para base64
+  const fileBuffer = fs.readFileSync(photoFile.filepath);
+  const base64File = fileBuffer.toString('base64');
+  
+  // Upload para Supabase Storage
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/coletivos-photos/${fileName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'image/jpeg'
+    },
+    body: fileBuffer
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Erro ao fazer upload da foto: ${error}`);
+  }
+
+  // Retornar URL pública da foto
+  return `${SUPABASE_URL}/storage/v1/object/public/coletivos-photos/${fileName}`;
+}
+
 // Função para salvar no Supabase
 async function saveToSupabase(coletivoData) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -297,6 +327,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   console.log(`API coletivos: ${req.method} request (${isProduction ? 'Produção' : 'Desenvolvimento'})`);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('isProduction:', isProduction);
   
   if (req.method === 'GET') {
     try {
@@ -332,14 +364,32 @@ export default async function handler(req, res) {
     console.log('Processando POST request para coletivos...');
     try {
       console.log('Configurando formidable...');
-      const form = formidable({
-        uploadDir: path.join(process.cwd(), 'public', 'uploads'),
-        keepExtensions: true,
-        maxFileSize: 50 * 1024 * 1024, // 50MB
-        maxFields: 50,
-        allowEmptyFiles: false,
-        multiples: true,
-      });
+      
+      let formConfig;
+      if (isProduction) {
+        // Em produção, não salvar arquivos - apenas processar em memória
+        console.log('Produção: configurando formidable sem salvamento de arquivo');
+        formConfig = {
+          keepExtensions: true,
+          maxFileSize: 50 * 1024 * 1024, // 50MB
+          maxFields: 50,
+          allowEmptyFiles: false,
+          multiples: true,
+        };
+      } else {
+        // Em desenvolvimento, salvar normalmente
+        console.log('Desenvolvimento: configurando formidable com salvamento');
+        formConfig = {
+          uploadDir: path.join(process.cwd(), 'public', 'uploads'),
+          keepExtensions: true,
+          maxFileSize: 50 * 1024 * 1024, // 50MB
+          maxFields: 50,
+          allowEmptyFiles: false,
+          multiples: true,
+        };
+      }
+      
+      const form = formidable(formConfig);
 
       console.log('Iniciando parse do formulário...');
       const [fields, files] = await Promise.race([
@@ -432,9 +482,16 @@ export default async function handler(req, res) {
         const photo = files.photo[0];
         
         if (isProduction) {
-          // Em produção, não salvar arquivo - apenas usar nome temporário
-          console.log('Produção: arquivo recebido mas não salvo (sistema read-only)');
-          photo_url = `temp_${photo.originalFilename}`;
+          // Em produção, salvar no Supabase Storage
+          console.log('Produção: fazendo upload para Supabase Storage');
+          const fileName = `${id}_${Date.now()}_${photo.originalFilename}`;
+          try {
+            photo_url = await uploadPhotoToSupabase(photo, fileName);
+            console.log('Foto salva no Supabase Storage:', photo_url);
+          } catch (error) {
+            console.error('Erro ao fazer upload da foto:', error);
+            photo_url = `error_${photo.originalFilename}`;
+          }
         } else {
           // Em desenvolvimento, salvar no sistema de arquivos
           const fileName = `${id}_${Date.now()}_${photo.originalFilename}`;
