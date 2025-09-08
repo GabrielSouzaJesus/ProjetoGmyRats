@@ -564,7 +564,7 @@ export default async function handler(req, res) {
         description: descriptionValue || '',
         total_points: parseInt(totalPointsValue),
         duration: parseInt(durationValue) || 0,
-        photo_url,
+        photo_url: photo_url || null,
         team1,
         team2,
         team1_points,
@@ -573,10 +573,11 @@ export default async function handler(req, res) {
         team2_participants,
         hashtag,
         status: 'pending',
-        created_at: new Date().toISOString(),
-        approved_by: '',
-        approved_at: ''
+        approved_by: null,
+        approved_at: null
       };
+      
+      console.log('Dados finais para Supabase:', coletivoData);
 
       // Para CSV (desenvolvimento), manter a nova estrutura
       const coletivoDataForCSV = {
