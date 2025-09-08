@@ -70,6 +70,9 @@ async function readFromSupabase() {
     throw new Error('Configuração do Supabase não encontrada');
   }
 
+  console.log('Lendo dados do Supabase...');
+  console.log('URL:', `${SUPABASE_URL}/rest/v1/coletivos?select=*&order=created_at.desc`);
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/coletivos?select=*&order=created_at.desc`, {
     headers: {
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -77,12 +80,20 @@ async function readFromSupabase() {
     }
   });
 
+  console.log('Resposta do Supabase - Status:', response.status);
+  console.log('Resposta do Supabase - OK:', response.ok);
+
   if (!response.ok) {
     const error = await response.text();
+    console.error('Erro na resposta do Supabase:', error);
     throw new Error(`Erro Supabase: ${error}`);
   }
 
-  return await response.json();
+  const data = await response.json();
+  console.log('Dados retornados do Supabase:', data);
+  console.log('Quantidade de coletivos:', data.length);
+  
+  return data;
 }
 
 // Função para atualizar no Supabase
