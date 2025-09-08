@@ -24,23 +24,40 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
   const handleApprove = async (coletivoId) => {
     setIsProcessing(true);
     try {
+      console.log('=== TENTANDO APROVAR TREINO ===');
+      console.log('ID do treino:', coletivoId);
+      console.log('Tipo do ID:', typeof coletivoId);
+      
+      // Teste: converter ID para número se necessário
+      const numericId = parseInt(coletivoId);
+      console.log('ID convertido para número:', numericId);
+      
+      const requestData = {
+        id: numericId, // Usar ID numérico
+        status: 'approved',
+        approved_by: 'Admin' // Em produção, usar usuário logado
+      };
+      
+      console.log('Dados sendo enviados:', requestData);
+      
       const response = await fetch('/api/coletivos', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id: coletivoId,
-          status: 'approved',
-          approved_by: 'Admin' // Em produção, usar usuário logado
-        }),
+        body: JSON.stringify(requestData),
       });
+
+      console.log('Resposta recebida:', response.status);
+      console.log('Response ok:', response.ok);
 
       if (response.ok) {
         alert('Treino coletivo aprovado com sucesso!');
         onClose();
         window.location.reload(); // Recarregar para atualizar dados
       } else {
+        const errorText = await response.text();
+        console.error('Erro na resposta:', errorText);
         alert('Erro ao aprovar treino coletivo');
       }
     } catch (error) {
