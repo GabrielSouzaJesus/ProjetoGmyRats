@@ -583,14 +583,8 @@ export default async function handler(req, res) {
       
       if (isProduction && SUPABASE_URL && SUPABASE_ANON_KEY) {
         // Produção: usar Supabase
-        try {
-          console.log('Salvando no Supabase...');
-          coletivo = await saveToSupabase(coletivoData);
-        } catch (supabaseError) {
-          console.error('Erro Supabase, tentando CSV como fallback:', supabaseError);
-          // Fallback para CSV se Supabase falhar
-          coletivo = saveToCSV(coletivoDataForCSV);
-        }
+        console.log('Salvando no Supabase...');
+        coletivo = await saveToSupabase(coletivoData);
       } else {
         // Desenvolvimento: usar CSV
         console.log('Salvando no CSV...');

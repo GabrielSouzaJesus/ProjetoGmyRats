@@ -77,11 +77,12 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
       return;
     }
     
-    if (!formData.photoFile) {
-      console.log('Erro: Foto não selecionada');
-      alert('Por favor, selecione uma foto do treino coletivo.');
-      return;
-    }
+    // Foto não é mais obrigatória para teste
+    // if (!formData.photoFile) {
+    //   console.log('Erro: Foto não selecionada');
+    //   alert('Por favor, selecione uma foto do treino coletivo.');
+    //   return;
+    // }
     
     console.log('Todas as validações passaram, iniciando envio...');
     setIsSubmitting(true);
@@ -359,18 +360,17 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
 
                 <div className="sm:col-span-2 lg:col-span-1">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Foto do Treino *
+                    Foto do Treino (Opcional)
                   </label>
                   <div className="space-y-3">
                     {/* Input de arquivo customizado */}
                     <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        required
-                      />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-4 text-center hover:border-azul-400 hover:bg-azul-50 transition-all duration-200">
                         <div className="flex flex-col items-center space-y-2">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-azul-100 to-verde-100 rounded-full flex items-center justify-center">
