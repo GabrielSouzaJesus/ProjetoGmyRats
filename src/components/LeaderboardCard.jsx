@@ -187,8 +187,8 @@ export default function LeaderboardCard({ members = [], checkins = [], checkInAc
     .map(m => ({
       ...m,
       individualScore: getMemberScoreWithRules(m.id, checkins, checkInActivities, localManualActivities),
-      coletivoScore: getColetivoScore(m.id, coletivos),
-      total: getMemberScoreWithRules(m.id, checkins, checkInActivities, localManualActivities) + getColetivoScore(m.id, coletivos)
+      coletivoScore: 0, // ❌ Não contar pontos coletivos no individual
+      total: getMemberScoreWithRules(m.id, checkins, checkInActivities, localManualActivities) // ❌ Só pontos individuais
     }))
     .filter(m => m.total > 0)
     .filter(m => !search || (m.name || m.full_name || "").toLowerCase().includes(search.toLowerCase()))

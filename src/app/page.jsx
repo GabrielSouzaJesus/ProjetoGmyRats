@@ -146,7 +146,7 @@ export default function Home() {
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <LeaderboardCard members={members} checkins={checkins} checkInActivities={checkInActivities} coletivos={coletivos} manualActivities={manualActivities}/>
-        <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} />
+        <TeamStats teams={teams} checkins={checkins} checkInActivities={checkInActivities} members={members} teamMemberships={teamMemberships} coletivos={coletivos} />
       </div>
       
       {/* Seção de Punições */}

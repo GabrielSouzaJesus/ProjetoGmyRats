@@ -11,7 +11,7 @@ const TAMANHO_EQUIPE = {
 // Data limite para cadastro: 08/08/2025 23:59
 const DATA_LIMITE_CADASTRO = "2025-08-08T23:59:59";
 
-export default function TeamStats({ teams = [], checkins = [], checkInActivities = [], members = [], teamMemberships = [] }) {
+export default function TeamStats({ teams = [], checkins = [], checkInActivities = [], members = [], teamMemberships = [], coletivos = [] }) {
   // Função de pontuação igual à usada no LeaderboardCard
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [search, setSearch] = useState("");
@@ -103,6 +103,33 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
     return member?.name || member?.full_name || `Participante ${memberId}`;
   }
 
+  // Função para calcular pontos dos treinos coletivos por equipe
+  function getColetivoScoreForTeam(teamName, coletivos) {
+    let total = 0;
+    
+    if (!Array.isArray(coletivos)) {
+      return 0;
+    }
+    
+    // Filtrar apenas treinos coletivos aprovados
+    const approvedColetivos = coletivos.filter(coletivo => coletivo.status === 'approved');
+    
+    approvedColetivos.forEach(coletivo => {
+      // Verificar se a equipe participou do treino coletivo
+      if (coletivo.team1 === teamName) {
+        total += coletivo.team1_points || 0;
+      } else if (coletivo.team2 === teamName) {
+        total += coletivo.team2_points || 0;
+      } else if (coletivo.team3 === teamName) {
+        total += coletivo.team3_points || 0;
+      } else if (coletivo.team4 === teamName) {
+        total += coletivo.team4_points || 0;
+      }
+    });
+    
+    return total;
+  }
+
   // Monta o ranking das equipes
   const teamRanking = teams.map(team => {
     // Pega os IDs dos membros dessa equipe via teamMemberships
@@ -118,9 +145,13 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
 
     // Soma os pontos de todos os membros
     const teamScore = teamMembers.reduce((sum, m) => sum + getMemberScoreWithRules(m.id), 0);
+    
+    // Adiciona pontos dos treinos coletivos
+    const coletivoScore = getColetivoScoreForTeam(team.name, coletivos);
+    const teamScoreComColetivo = teamScore + coletivoScore;
 
     // Aplica as punições
-    const teamScoreComPunicao = Math.max(0, teamScore - punicoes.pontosPunicao);
+    const teamScoreComPunicao = Math.max(0, teamScoreComColetivo - punicoes.pontosPunicao);
 
     const teamSize = TAMANHO_EQUIPE[team.name?.trim()] || 1;
     const teamScoreAjustado = teamScoreComPunicao / teamSize;
@@ -128,6 +159,8 @@ export default function TeamStats({ teams = [], checkins = [], checkInActivities
     return {
       ...team,
       score: teamScore,
+      coletivoScore: coletivoScore,
+      scoreComColetivo: teamScoreComColetivo,
       scoreComPunicao: teamScoreComPunicao,
       scoreAjustado: teamScoreAjustado,
       members: teamMembers,
