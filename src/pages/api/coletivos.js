@@ -648,17 +648,25 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'PUT') {
     try {
+      console.log('=== PUT /api/coletivos ===');
+      console.log('Body recebido:', req.body);
+      
       const { id, status, approved_by } = req.body;
       
+      console.log('Dados extraídos:', { id, status, approved_by });
+      
       if (!id || !status) {
+        console.log('Erro: ID ou status faltando');
         return res.status(400).json({ error: 'ID e status são obrigatórios' });
       }
 
       const updateData = {
         status,
-        approved_by: approved_by || '',
-        approved_at: status === 'approved' ? new Date().toISOString() : ''
+        approved_by: approved_by || null,
+        approved_at: status === 'approved' ? new Date().toISOString() : null
       };
+      
+      console.log('Dados para atualização:', updateData);
 
       if (isProduction && SUPABASE_URL && SUPABASE_ANON_KEY) {
         // Produção: usar Supabase
