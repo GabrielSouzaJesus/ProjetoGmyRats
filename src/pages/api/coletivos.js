@@ -102,6 +102,10 @@ async function updateInSupabase(id, updateData) {
     throw new Error('Configuração do Supabase não encontrada');
   }
 
+  console.log('updateInSupabase - ID:', id);
+  console.log('updateInSupabase - updateData:', updateData);
+  console.log('updateInSupabase - URL:', `${SUPABASE_URL}/rest/v1/coletivos?id=eq.${id}`);
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/coletivos?id=eq.${id}`, {
     method: 'PATCH',
     headers: {
@@ -113,12 +117,18 @@ async function updateInSupabase(id, updateData) {
     body: JSON.stringify(updateData)
   });
 
+  console.log('updateInSupabase - Response status:', response.status);
+  console.log('updateInSupabase - Response ok:', response.ok);
+
   if (!response.ok) {
     const error = await response.text();
+    console.error('updateInSupabase - Erro na resposta:', error);
     throw new Error(`Erro Supabase: ${error}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  console.log('updateInSupabase - Resultado:', result);
+  return result;
 }
 
 // Função para salvar no CSV (desenvolvimento local)
@@ -671,7 +681,11 @@ export default async function handler(req, res) {
       if (isProduction && SUPABASE_URL && SUPABASE_ANON_KEY) {
         // Produção: usar Supabase
         try {
+          console.log('Tentando atualizar no Supabase...');
+          console.log('ID:', id);
+          console.log('updateData:', updateData);
           await updateInSupabase(id, updateData);
+          console.log('Atualização no Supabase bem-sucedida!');
         } catch (supabaseError) {
           console.error('Erro Supabase, tentando CSV como fallback:', supabaseError);
           // Fallback para CSV se Supabase falhar
@@ -679,6 +693,7 @@ export default async function handler(req, res) {
         }
       } else {
         // Desenvolvimento: usar CSV
+        console.log('Desenvolvimento: atualizando CSV...');
         updateInCSV(id, updateData);
       }
 
