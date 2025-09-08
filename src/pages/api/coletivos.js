@@ -504,9 +504,11 @@ export default async function handler(req, res) {
         }
         console.log('Foto processada:', photo_url);
       } else {
-        console.log('Nenhuma foto encontrada');
+        console.log('Nenhuma foto encontrada - continuando sem foto');
+        photo_url = '';
       }
 
+      console.log('Processando participantes de cada equipe...');
       // Processar participantes de cada equipe
       teamsData.forEach(team => {
         if (!Array.isArray(team.participants)) {
@@ -514,13 +516,16 @@ export default async function handler(req, res) {
         }
       });
 
+      console.log('Calculando distribuição proporcional de pontos...');
       // Calcular distribuição proporcional de pontos baseada no número de participantes
       const totalParticipants = teamsData.reduce((total, team) => total + team.participants.length, 0);
       
       if (totalParticipants === 0) {
+        console.log('Erro: Nenhum participante encontrado');
         return res.status(400).json({ error: 'É necessário pelo menos um participante' });
       }
 
+      console.log(`Total de participantes: ${totalParticipants}`);
       // Distribuir pontos proporcionalmente
       teamsData.forEach(team => {
         const participantCount = team.participants.length;
@@ -529,12 +534,16 @@ export default async function handler(req, res) {
         
         team.points = points;
         team.percentage = Math.round(percentage * 100) / 100;
+        console.log(`Equipe ${team.teamName}: ${participantCount} participantes, ${points} pontos (${team.percentage}%)`);
       });
       
+      console.log('Gerando hashtag...');
       // Gerar hashtag com todas as equipes
       const teamNamesForHashtag = teamsData.map(team => team.teamName.toLowerCase().replace(/\s+/g, '_')).join('_');
       const hashtag = `#coletivo_${teamNamesForHashtag}_${totalPointsValue}pts`;
+      console.log('Hashtag gerada:', hashtag);
 
+      console.log('Convertendo dados para estrutura do Supabase...');
       // Converter dados da nova estrutura para a estrutura antiga do Supabase
       const team1 = teamsData[0]?.teamName || '';
       const team2 = teamsData[1]?.teamName || '';
@@ -542,6 +551,12 @@ export default async function handler(req, res) {
       const team2_points = teamsData[1]?.points || 0;
       const team1_participants = teamsData[0]?.participants || [];
       const team2_participants = teamsData[1]?.participants || [];
+      
+      console.log('Dados convertidos:', {
+        team1, team2, team1_points, team2_points,
+        team1_participants_count: team1_participants.length,
+        team2_participants_count: team2_participants.length
+      });
 
       // Dados do coletivo para salvar (estrutura compatível com Supabase)
       const coletivoData = {
