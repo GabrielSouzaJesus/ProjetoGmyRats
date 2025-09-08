@@ -7,14 +7,11 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    totalPoints: 30,
+    totalPoints: 40,
     duration: 60,
     photoFile: null,
     photoPreview: '',
-    team1: '',
-    team2: '',
-    team1Participants: [],
-    team2Participants: []
+    teams: [] // Array de objetos { teamName: '', participants: [] }
   });
 
   // Função para obter membros de uma equipe específica
@@ -49,19 +46,32 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
       return;
     }
     
-    if (!formData.team1 || !formData.team2) {
-      console.log('Erro: Equipes não selecionadas');
-      alert('Por favor, selecione as duas equipes participantes.');
+    if (formData.teams.length < 2) {
+      console.log('Erro: Menos de 2 equipes');
+      alert('É necessário pelo menos 2 equipes para registrar um treino coletivo.');
       return;
     }
     
-    if (formData.team1 === formData.team2) {
-      console.log('Erro: Equipes iguais');
+    // Verificar se todas as equipes têm nome
+    const teamsWithoutName = formData.teams.filter(team => !team.teamName.trim());
+    if (teamsWithoutName.length > 0) {
+      console.log('Erro: Equipes sem nome');
+      alert('Todas as equipes devem ter um nome selecionado.');
+      return;
+    }
+    
+    // Verificar se há equipes duplicadas
+    const teamNames = formData.teams.map(team => team.teamName);
+    const uniqueTeamNames = [...new Set(teamNames)];
+    if (teamNames.length !== uniqueTeamNames.length) {
+      console.log('Erro: Equipes duplicadas');
       alert('As equipes devem ser diferentes.');
       return;
     }
     
-    if (formData.team1Participants.length + formData.team2Participants.length < 2) {
+    // Verificar se há pelo menos 2 participantes no total
+    const totalParticipants = formData.teams.reduce((total, team) => total + team.participants.length, 0);
+    if (totalParticipants < 2) {
       console.log('Erro: Menos de 2 participantes');
       alert('É necessário pelo menos 2 participantes para registrar um treino coletivo.');
       return;
@@ -83,10 +93,7 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
           formDataToSend.append('description', formData.description);
           formDataToSend.append('total_points', formData.totalPoints);
           formDataToSend.append('duration', formData.duration);
-          formDataToSend.append('team1', formData.team1);
-          formDataToSend.append('team2', formData.team2);
-          formDataToSend.append('team1_participants', JSON.stringify(formData.team1Participants));
-          formDataToSend.append('team2_participants', JSON.stringify(formData.team2Participants));
+          formDataToSend.append('teams', JSON.stringify(formData.teams));
           
           if (formData.photoFile) {
             formDataToSend.append('photo', formData.photoFile);
@@ -109,14 +116,11 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
             setFormData({
               title: '',
               description: '',
-              totalPoints: 30,
+              totalPoints: 40,
               duration: 60,
               photoFile: null,
               photoPreview: '',
-              team1: '',
-              team2: '',
-              team1Participants: [],
-              team2Participants: []
+              teams: []
             });
           } else {
             const error = await response.json();
@@ -131,41 +135,85 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
         }
   };
 
-  const addParticipant = (memberId, team) => {
+  // Função para adicionar uma nova equipe
+  const addTeam = () => {
+    setFormData(prev => ({
+      ...prev,
+      teams: [...prev.teams, { teamName: '', participants: [] }]
+    }));
+  };
+
+  // Função para remover uma equipe
+  const removeTeam = (teamIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: prev.teams.filter((_, index) => index !== teamIndex)
+    }));
+  };
+
+  // Função para atualizar o nome de uma equipe
+  const updateTeamName = (teamIndex, teamName) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: prev.teams.map((team, index) => 
+        index === teamIndex ? { ...team, teamName } : team
+      )
+    }));
+  };
+
+  // Função para adicionar participante a uma equipe específica
+  const addParticipant = (memberId, teamIndex) => {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
 
     const participant = {
       id: memberId,
-      name: member.full_name,
-      team: team
+      name: member.full_name
     };
 
-    if (team === formData.team1) {
-      setFormData(prev => ({
-        ...prev,
-        team1Participants: [...prev.team1Participants, participant]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        team2Participants: [...prev.team2Participants, participant]
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      teams: prev.teams.map((team, index) => 
+        index === teamIndex 
+          ? { ...team, participants: [...team.participants, participant] }
+          : team
+      )
+    }));
   };
 
-  const removeParticipant = (memberId, team) => {
-    if (team === formData.team1) {
-      setFormData(prev => ({
-        ...prev,
-        team1Participants: prev.team1Participants.filter(p => p.id !== memberId)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        team2Participants: prev.team2Participants.filter(p => p.id !== memberId)
-      }));
-    }
+  // Função para remover participante de uma equipe específica
+  const removeParticipant = (memberId, teamIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      teams: prev.teams.map((team, index) => 
+        index === teamIndex 
+          ? { ...team, participants: team.participants.filter(p => p.id !== memberId) }
+          : team
+      )
+    }));
+  };
+
+  // Função para calcular distribuição proporcional de pontos
+  const calculateProportionalDistribution = (teams, totalPoints) => {
+    if (!teams || teams.length === 0) return [];
+    
+    // Calcular total de participantes
+    const totalParticipants = teams.reduce((total, team) => total + team.participants.length, 0);
+    
+    if (totalParticipants === 0) return teams.map(team => ({ ...team, points: 0, percentage: 0 }));
+    
+    // Distribuir pontos proporcionalmente
+    return teams.map(team => {
+      const participantCount = team.participants.length;
+      const percentage = (participantCount / totalParticipants) * 100;
+      const points = Math.round((participantCount / totalParticipants) * totalPoints);
+      
+      return {
+        ...team,
+        points,
+        percentage: Math.round(percentage * 100) / 100 // Arredondar para 2 casas decimais
+      };
+    });
   };
 
   const handlePhotoUpload = (event) => {
@@ -190,6 +238,19 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
       }));
     }
   };
+
+  // Inicializar com 2 equipes quando o modal abrir
+  React.useEffect(() => {
+    if (isOpen && formData.teams.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        teams: [
+          { teamName: '', participants: [] },
+          { teamName: '', participants: [] }
+        ]
+      }));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -279,7 +340,7 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
                     disabled
                     readOnly
                   />
-                  <p className="text-xs text-gray-500 mt-1">Pontuação fixa de 30 pontos</p>
+                  <p className="text-xs text-gray-500 mt-1">Pontuação fixa de 40 pontos</p>
                 </div>
 
                 <div>
@@ -360,73 +421,156 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
 
             {/* Seleção de Equipes */}
             <div className="space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-gradient-to-r from-laranja-600 to-azul-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-laranja-600 to-azul-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Equipes Participantes</h4>
                 </div>
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900">Equipes Participantes</h4>
+                <button
+                  type="button"
+                  onClick={addTeam}
+                  className="px-3 py-2 bg-gradient-to-r from-azul-600 to-verde-600 text-white text-sm rounded-lg hover:from-azul-700 hover:to-verde-700 transition-all duration-200 flex items-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>Adicionar Equipe</span>
+                </button>
               </div>
               
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Equipe Principal (80% dos pontos)
-                  </label>
-                  <select
-                    value={formData.team1}
-                    onChange={(e) => setFormData(prev => ({ ...prev, team1: e.target.value }))}
-                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                    required
-                  >
-                    <option value="">Selecione a equipe</option>
-                    {teams.map(team => (
-                      <option key={team.id} value={team.name}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Equipe Secundária (20% dos pontos)
-                  </label>
-                  <select
-                    value={formData.team2}
-                    onChange={(e) => setFormData(prev => ({ ...prev, team2: e.target.value }))}
-                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                    required
-                  >
-                    <option value="">Selecione a equipe</option>
-                    {teams.map(team => (
-                      <option key={team.id} value={team.name}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Lista de Equipes */}
+              <div className="space-y-4">
+                {formData.teams.map((team, teamIndex) => (
+                  <div key={teamIndex} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="text-sm font-medium text-gray-700">Equipe {teamIndex + 1}</h5>
+                      {formData.teams.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTeam(teamIndex)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Remover
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Nome da Equipe
+                      </label>
+                      <select
+                        value={team.teamName}
+                        onChange={(e) => updateTeamName(teamIndex, e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                        required
+                      >
+                        <option value="">Selecione a equipe</option>
+                        {teams.map(teamOption => (
+                          <option key={teamOption.id} value={teamOption.name}>
+                            {teamOption.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Participantes desta equipe */}
+                    {team.teamName && (
+                      <div>
+                        <h6 className="text-xs font-medium text-gray-600 mb-2">Participantes:</h6>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {getMembersByTeam(team.teamName).map(member => (
+                            <div key={member.id} className="flex items-center space-x-2 p-2 bg-white rounded-lg">
+                              <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                {member.profile_picture_url ? (
+                                  <img 
+                                    src={member.profile_picture_url} 
+                                    alt={member.full_name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-azul-400 to-verde-500 flex items-center justify-center text-white font-bold text-xs">
+                                    {member.full_name?.charAt(0) || '?'}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs font-medium text-gray-900 flex-1 truncate">
+                                {member.full_name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addParticipant(member.id, teamIndex)}
+                                className="px-2 py-1 bg-gradient-to-r from-azul-600 to-verde-600 text-white text-xs rounded-lg hover:from-azul-700 hover:to-verde-700 transition-all duration-200"
+                              >
+                                Adicionar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Participantes Selecionados */}
+                        {team.participants.length > 0 && (
+                          <div className="mt-3">
+                            <h6 className="text-xs font-medium text-gray-600 mb-2">Selecionados:</h6>
+                            <div className="space-y-1">
+                              {team.participants.map(participant => (
+                                <div key={participant.id} className="flex items-center justify-between p-2 bg-gradient-to-r from-azul-50 to-verde-50 rounded-lg border border-azul-200">
+                                  <span className="text-xs text-gray-900">{participant.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeParticipant(participant.id, teamIndex)}
+                                    className="text-red-600 hover:text-red-800 text-xs"
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Preview da Distribuição */}
-              {formData.team1 && formData.team2 && (
+              {formData.teams.length >= 2 && formData.teams.every(team => team.teamName) && (
                 <div className="bg-gradient-to-r from-azul-50 to-verde-50 p-4 rounded-lg border border-azul-200 shadow-sm">
                   <div className="flex items-center space-x-2 mb-3">
                     <div className="w-5 h-5 bg-gradient-to-r from-azul-600 to-verde-600 rounded-full"></div>
-                    <h5 className="font-semibold text-gray-900">Distribuição de Pontos</h5>
+                    <h5 className="font-semibold text-gray-900">Distribuição Proporcional de Pontos</h5>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-white rounded-lg border border-azul-100">
-                      <span className="text-sm font-medium text-gray-700">{formData.team1}</span>
+                  <div className="space-y-2">
+                    {(() => {
+                      const teamsWithDistribution = calculateProportionalDistribution(formData.teams, formData.totalPoints);
+                      return teamsWithDistribution.map((team, index) => (
+                        <div key={index} className="flex justify-between items-center p-2 bg-white rounded-lg border border-azul-100">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-700">{team.teamName}</span>
+                            <span className="text-xs text-gray-500">{team.participants.length} participante{team.participants.length !== 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-azul-600">
+                              {team.points} pts
+                            </span>
+                            <div className="text-xs text-gray-500">
+                              {team.percentage}%
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-medium text-gray-700">Total:</span>
                       <span className="font-bold text-azul-600">
-                        {Math.round(formData.totalPoints * 0.8)} pts (80%)
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-2 bg-white rounded-lg border border-verde-100">
-                      <span className="text-sm font-medium text-gray-700">{formData.team2}</span>
-                      <span className="font-bold text-verde-600">
-                        {Math.round(formData.totalPoints * 0.2)} pts (20%)
+                        {formData.teams.reduce((total, team) => total + team.participants.length, 0)} participantes • {formData.totalPoints} pontos
                       </span>
                     </div>
                   </div>
@@ -435,141 +579,6 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
             </div>
           </div>
 
-          {/* Seleção de Participantes */}
-          <div className="mt-8">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-gradient-to-r from-verde-600 to-laranja-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900">Participantes</h4>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* Equipe 1 */}
-              <div className="space-y-3">
-                <h5 className="text-sm sm:text-base font-medium text-gray-700">{formData.team1 || 'Equipe 1'}</h5>
-                {formData.team1 ? (
-                  <div className="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
-                    {getMembersByTeam(formData.team1).map(member => (
-                      <div key={member.id} className="flex items-center space-x-2 sm:space-x-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                          {member.profile_picture_url ? (
-                            <img 
-                              src={member.profile_picture_url} 
-                              alt={member.full_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-azul-400 to-verde-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                              {member.full_name?.charAt(0) || '?'}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-900 flex-1 truncate">
-                          {member.full_name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => addParticipant(member.id, formData.team1)}
-                          className="px-2 sm:px-3 py-1 bg-gradient-to-r from-azul-600 to-verde-600 text-white text-xs rounded-lg hover:from-azul-700 hover:to-verde-700 transition-all duration-200 flex-shrink-0 shadow-sm"
-                        >
-                          Adicionar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <p className="text-xs sm:text-sm">Selecione uma equipe para ver os participantes</p>
-                  </div>
-                )}
-                
-                {/* Participantes Selecionados */}
-                {formData.team1Participants.length > 0 && (
-                  <div className="mt-3">
-                    <h6 className="text-sm font-medium text-gray-600 mb-2">Selecionados:</h6>
-                    <div className="space-y-1">
-                      {formData.team1Participants.map(participant => (
-                        <div key={participant.id} className="flex items-center justify-between p-2 bg-gradient-to-r from-azul-50 to-verde-50 rounded-lg border border-azul-200">
-                          <span className="text-sm text-gray-900">{participant.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeParticipant(participant.id, formData.team1)}
-                            className="text-red-600 hover:text-red-800 text-xs"
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Equipe 2 */}
-              <div className="space-y-3">
-                <h5 className="text-sm sm:text-base font-medium text-gray-700">{formData.team2 || 'Equipe 2'}</h5>
-                {formData.team2 ? (
-                  <div className="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
-                    {getMembersByTeam(formData.team2).map(member => (
-                      <div key={member.id} className="flex items-center space-x-2 sm:space-x-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                          {member.profile_picture_url ? (
-                            <img 
-                              src={member.profile_picture_url} 
-                              alt={member.full_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-laranja-400 to-azul-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                              {member.full_name?.charAt(0) || '?'}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-900 flex-1 truncate">
-                          {member.full_name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => addParticipant(member.id, formData.team2)}
-                          className="px-2 sm:px-3 py-1 bg-gradient-to-r from-laranja-600 to-azul-600 text-white text-xs rounded-lg hover:from-laranja-700 hover:to-azul-700 transition-all duration-200 flex-shrink-0 shadow-sm"
-                        >
-                          Adicionar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <p className="text-xs sm:text-sm">Selecione uma equipe para ver os participantes</p>
-                  </div>
-                )}
-                
-                {/* Participantes Selecionados */}
-                {formData.team2Participants.length > 0 && (
-                  <div className="mt-3">
-                    <h6 className="text-sm font-medium text-gray-600 mb-2">Selecionados:</h6>
-                    <div className="space-y-1">
-                      {formData.team2Participants.map(participant => (
-                        <div key={participant.id} className="flex items-center justify-between p-2 bg-gradient-to-r from-laranja-50 to-azul-50 rounded-lg border border-laranja-200">
-                          <span className="text-sm text-gray-900">{participant.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeParticipant(participant.id, formData.team2)}
-                            className="text-red-600 hover:text-red-800 text-xs"
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </form>
 
         {/* Footer */}
@@ -578,7 +587,7 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-gradient-to-r from-azul-600 to-verde-600 rounded-full animate-pulse"></div>
               <span className="text-xs sm:text-sm text-gray-600 font-medium">
-                Total de participantes: <span className="text-azul-600 font-bold">{formData.team1Participants.length + formData.team2Participants.length}</span>
+                Total de participantes: <span className="text-azul-600 font-bold">{formData.teams.reduce((total, team) => total + team.participants.length, 0)}</span>
               </span>
             </div>
             <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">

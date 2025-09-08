@@ -355,10 +355,7 @@ export default async function handler(req, res) {
         description,
         total_points,
         duration,
-        team1,
-        team2,
-        team1_participants,
-        team2_participants
+        teams
       } = fields;
 
       // Extrair valores dos arrays (formidable retorna arrays)
@@ -366,18 +363,42 @@ export default async function handler(req, res) {
       const descriptionValue = Array.isArray(description) ? description[0] : description;
       const totalPointsValue = Array.isArray(total_points) ? total_points[0] : total_points;
       const durationValue = Array.isArray(duration) ? duration[0] : duration;
-      const team1Value = Array.isArray(team1) ? team1[0] : team1;
-      const team2Value = Array.isArray(team2) ? team2[0] : team2;
-      const team1ParticipantsValue = Array.isArray(team1_participants) ? team1_participants[0] : team1_participants;
-      const team2ParticipantsValue = Array.isArray(team2_participants) ? team2_participants[0] : team2_participants;
+      const teamsValue = Array.isArray(teams) ? teams[0] : teams;
 
       console.log('Validando dados obrigatórios...');
       // Validar dados obrigatórios
-      if (!titleValue || !team1Value || !team2Value || !totalPointsValue) {
-        console.log('Dados obrigatórios faltando:', { titleValue, team1Value, team2Value, totalPointsValue });
+      if (!titleValue || !teamsValue || !totalPointsValue) {
+        console.log('Dados obrigatórios faltando:', { titleValue, teamsValue, totalPointsValue });
         return res.status(400).json({ error: 'Dados obrigatórios não fornecidos' });
       }
       console.log('Validação passou');
+
+      // Processar dados das equipes
+      let teamsData;
+      try {
+        teamsData = JSON.parse(teamsValue);
+      } catch (error) {
+        console.error('Erro ao parsear teams:', error);
+        return res.status(400).json({ error: 'Formato de dados das equipes inválido' });
+      }
+
+      // Validar se há pelo menos 2 equipes
+      if (!Array.isArray(teamsData) || teamsData.length < 2) {
+        return res.status(400).json({ error: 'É necessário pelo menos 2 equipes' });
+      }
+
+      // Validar se todas as equipes têm nome
+      const teamsWithoutName = teamsData.filter(team => !team.teamName || !team.teamName.trim());
+      if (teamsWithoutName.length > 0) {
+        return res.status(400).json({ error: 'Todas as equipes devem ter um nome' });
+      }
+
+      // Validar se há equipes duplicadas
+      const teamNames = teamsData.map(team => team.teamName);
+      const uniqueTeamNames = [...new Set(teamNames)];
+      if (teamNames.length !== uniqueTeamNames.length) {
+        return res.status(400).json({ error: 'As equipes devem ser diferentes' });
+      }
 
       // Gerar ID único primeiro
       const id = Date.now().toString();
@@ -400,39 +421,33 @@ export default async function handler(req, res) {
         console.log('Nenhuma foto encontrada');
       }
 
-      // Calcular pontos distribuídos
-      const team1_points = Math.round(totalPointsValue * 0.8);
-      const team2_points = Math.round(totalPointsValue * 0.2);
-
-      // Gerar hashtag
-      const hashtag = `#coletivo_${team1Value.toLowerCase().replace(/\s+/g, '_')}_${team2Value.toLowerCase().replace(/\s+/g, '_')}_${totalPointsValue}pts`;
-
-      // Converter participantes de string JSON para array se necessário
-      let team1ParticipantsArray = team1ParticipantsValue;
-      let team2ParticipantsArray = team2ParticipantsValue;
-      
-      // Se for string JSON, fazer parse
-      if (typeof team1ParticipantsValue === 'string') {
-        try {
-          team1ParticipantsArray = JSON.parse(team1ParticipantsValue);
-        } catch (error) {
-          console.error('Erro ao parsear team1_participants:', error);
-          team1ParticipantsArray = [];
+      // Processar participantes de cada equipe
+      teamsData.forEach(team => {
+        if (!Array.isArray(team.participants)) {
+          team.participants = [];
         }
-      }
+      });
+
+      // Calcular distribuição proporcional de pontos baseada no número de participantes
+      const totalParticipants = teamsData.reduce((total, team) => total + team.participants.length, 0);
       
-      if (typeof team2ParticipantsValue === 'string') {
-        try {
-          team2ParticipantsArray = JSON.parse(team2ParticipantsValue);
-        } catch (error) {
-          console.error('Erro ao parsear team2_participants:', error);
-          team2ParticipantsArray = [];
-        }
+      if (totalParticipants === 0) {
+        return res.status(400).json({ error: 'É necessário pelo menos um participante' });
       }
+
+      // Distribuir pontos proporcionalmente
+      teamsData.forEach(team => {
+        const participantCount = team.participants.length;
+        const percentage = (participantCount / totalParticipants) * 100;
+        const points = Math.round((participantCount / totalParticipants) * totalPointsValue);
+        
+        team.points = points;
+        team.percentage = Math.round(percentage * 100) / 100;
+      });
       
-      // Garantir que são arrays
-      if (!Array.isArray(team1ParticipantsArray)) team1ParticipantsArray = [];
-      if (!Array.isArray(team2ParticipantsArray)) team2ParticipantsArray = [];
+      // Gerar hashtag com todas as equipes
+      const teamNamesForHashtag = teamsData.map(team => team.teamName.toLowerCase().replace(/\s+/g, '_')).join('_');
+      const hashtag = `#coletivo_${teamNamesForHashtag}_${totalPointsValue}pts`;
 
       // Dados do coletivo para salvar
       const coletivoData = {
@@ -441,15 +456,11 @@ export default async function handler(req, res) {
         total_points: parseInt(totalPointsValue),
         duration: parseInt(durationValue) || 0,
         photo_url,
-        team1: team1Value,
-        team2: team2Value,
-        team1_points,
-        team2_points,
-        team1_participants: team1ParticipantsArray,
-        team2_participants: team2ParticipantsArray,
-        created_at: new Date().toISOString(),
+        teams: teamsData,
+        total_participants: totalParticipants,
         hashtag,
         status: 'pending',
+        created_at: new Date().toISOString(),
         approved_by: '',
         approved_at: ''
       };
