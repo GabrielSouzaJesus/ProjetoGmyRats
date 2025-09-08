@@ -138,10 +138,12 @@ const ColetivoModal = ({ isOpen, onClose, teams = [], members = [], teamMembersh
 
   // Função para adicionar uma nova equipe
   const addTeam = () => {
-    setFormData(prev => ({
-      ...prev,
-      teams: [...prev.teams, { teamName: '', participants: [] }]
-    }));
+    if (formData.teams.length < 4) { // Máximo de 4 times
+      setFormData(prev => ({
+        ...prev,
+        teams: [...prev.teams, { teamName: '', participants: [] }]
+      }));
+    }
   };
 
   // Função para remover uma equipe
