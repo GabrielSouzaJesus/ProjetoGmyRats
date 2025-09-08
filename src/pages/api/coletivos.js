@@ -432,9 +432,9 @@ export default async function handler(req, res) {
         const photo = files.photo[0];
         
         if (isProduction) {
-          // Em produção, usar URL temporária ou base64
-          console.log('Produção: usando URL temporária da foto');
-          photo_url = `/temp/${photo.originalFilename}`;
+          // Em produção, não salvar arquivo - apenas usar nome temporário
+          console.log('Produção: arquivo recebido mas não salvo (sistema read-only)');
+          photo_url = `temp_${photo.originalFilename}`;
         } else {
           // Em desenvolvimento, salvar no sistema de arquivos
           const fileName = `${id}_${Date.now()}_${photo.originalFilename}`;
