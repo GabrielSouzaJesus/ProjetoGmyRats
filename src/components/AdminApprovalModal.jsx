@@ -245,56 +245,128 @@ const AdminApprovalModal = ({ isOpen, onClose, coletivos = [], members = [] }) =
                         </div>
                       </div>
 
-                      {/* Distribuição de pontos */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
-                        <div className="bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-lg p-3 sm:p-4">
-                          <h6 className="font-semibold text-azul-900 mb-2 text-sm sm:text-base">{coletivo.team1}</h6>
-                          <p className="text-xl sm:text-2xl font-bold text-azul-600">{coletivo.team1_points} pts</p>
-                        </div>
-                        <div className="bg-gradient-to-r from-laranja-50 to-azul-50 border border-laranja-200 rounded-lg p-3 sm:p-4">
-                          <h6 className="font-semibold text-laranja-900 mb-2 text-sm sm:text-base">{coletivo.team2}</h6>
-                          <p className="text-xl sm:text-2xl font-bold text-laranja-600">{coletivo.team2_points} pts</p>
-                        </div>
+                      {/* Distribuição de pontos - Dinâmica para até 4 times */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                        {/* Team 1 */}
+                        {coletivo.team1 && (
+                          <div className="bg-gradient-to-r from-azul-50 to-verde-50 border border-azul-200 rounded-lg p-3 sm:p-4">
+                            <h6 className="font-semibold text-azul-900 mb-2 text-sm sm:text-base">{coletivo.team1}</h6>
+                            <p className="text-xl sm:text-2xl font-bold text-azul-600">{coletivo.team1_points} pts</p>
+                          </div>
+                        )}
+                        
+                        {/* Team 2 */}
+                        {coletivo.team2 && (
+                          <div className="bg-gradient-to-r from-laranja-50 to-azul-50 border border-laranja-200 rounded-lg p-3 sm:p-4">
+                            <h6 className="font-semibold text-laranja-900 mb-2 text-sm sm:text-base">{coletivo.team2}</h6>
+                            <p className="text-xl sm:text-2xl font-bold text-laranja-600">{coletivo.team2_points} pts</p>
+                          </div>
+                        )}
+                        
+                        {/* Team 3 */}
+                        {coletivo.team3 && (
+                          <div className="bg-gradient-to-r from-verde-50 to-azul-50 border border-verde-200 rounded-lg p-3 sm:p-4">
+                            <h6 className="font-semibold text-verde-900 mb-2 text-sm sm:text-base">{coletivo.team3}</h6>
+                            <p className="text-xl sm:text-2xl font-bold text-verde-600">{coletivo.team3_points} pts</p>
+                          </div>
+                        )}
+                        
+                        {/* Team 4 */}
+                        {coletivo.team4 && (
+                          <div className="bg-gradient-to-r from-roxo-50 to-azul-50 border border-roxo-200 rounded-lg p-3 sm:p-4">
+                            <h6 className="font-semibold text-roxo-900 mb-2 text-sm sm:text-base">{coletivo.team4}</h6>
+                            <p className="text-xl sm:text-2xl font-bold text-roxo-600">{coletivo.team4_points} pts</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Participantes */}
                       <div className="space-y-3 sm:space-y-4">
                         <h6 className="font-semibold text-gray-900 text-sm sm:text-base">Participantes:</h6>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                          <div>
-                            <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team1}</p>
-                            <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
-                              {coletivo.team1_participants && Array.isArray(coletivo.team1_participants) && coletivo.team1_participants.length > 0 ? (
-                                coletivo.team1_participants.map((participant, index) => (
-                                  <div key={index} className="flex items-center space-x-2 p-2 bg-azul-50 rounded-lg">
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-azul-400 to-verde-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                      {participant.name ? participant.name.charAt(0) : '?'}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                          {/* Team 1 Participants */}
+                          {coletivo.team1 && (
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team1}</p>
+                              <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
+                                {coletivo.team1_participants && Array.isArray(coletivo.team1_participants) && coletivo.team1_participants.length > 0 ? (
+                                  coletivo.team1_participants.map((participant, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 bg-azul-50 rounded-lg">
+                                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-azul-400 to-verde-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {participant.name ? participant.name.charAt(0) : '?'}
+                                      </div>
+                                      <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
                                     </div>
-                                    <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
-                              )}
+                                  ))
+                                ) : (
+                                  <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team2}</p>
-                            <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
-                              {coletivo.team2_participants && Array.isArray(coletivo.team2_participants) && coletivo.team2_participants.length > 0 ? (
-                                coletivo.team2_participants.map((participant, index) => (
-                                  <div key={index} className="flex items-center space-x-2 p-2 bg-laranja-50 rounded-lg">
-                                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-laranja-400 to-azul-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                      {participant.name ? participant.name.charAt(0) : '?'}
+                          )}
+                          
+                          {/* Team 2 Participants */}
+                          {coletivo.team2 && (
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team2}</p>
+                              <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
+                                {coletivo.team2_participants && Array.isArray(coletivo.team2_participants) && coletivo.team2_participants.length > 0 ? (
+                                  coletivo.team2_participants.map((participant, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 bg-laranja-50 rounded-lg">
+                                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-laranja-400 to-azul-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {participant.name ? participant.name.charAt(0) : '?'}
+                                      </div>
+                                      <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
                                     </div>
-                                    <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
-                              )}
+                                  ))
+                                ) : (
+                                  <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
+                          
+                          {/* Team 3 Participants */}
+                          {coletivo.team3 && (
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team3}</p>
+                              <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
+                                {coletivo.team3_participants && Array.isArray(coletivo.team3_participants) && coletivo.team3_participants.length > 0 ? (
+                                  coletivo.team3_participants.map((participant, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 bg-verde-50 rounded-lg">
+                                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-verde-400 to-azul-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {participant.name ? participant.name.charAt(0) : '?'}
+                                      </div>
+                                      <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Team 4 Participants */}
+                          {coletivo.team4 && (
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">{coletivo.team4}</p>
+                              <div className="space-y-1 sm:space-y-2 max-h-32 overflow-y-auto">
+                                {coletivo.team4_participants && Array.isArray(coletivo.team4_participants) && coletivo.team4_participants.length > 0 ? (
+                                  coletivo.team4_participants.map((participant, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 bg-roxo-50 rounded-lg">
+                                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-roxo-400 to-azul-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {participant.name ? participant.name.charAt(0) : '?'}
+                                      </div>
+                                      <span className="text-xs sm:text-sm text-gray-700 truncate">{participant.name}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-xs sm:text-sm text-gray-500">Nenhum participante</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

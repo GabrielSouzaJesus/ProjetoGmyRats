@@ -576,10 +576,10 @@ export default async function handler(req, res) {
         total_points: parseInt(totalPointsValue),
         duration: parseInt(durationValue) || 0,
         photo_url: photo_url || null,
-        team1: teamsData[0]?.name || '',
-        team2: teamsData[1]?.name || '',
-        team3: teamsData[2]?.name || null,
-        team4: teamsData[3]?.name || null,
+        team1: teamsData[0]?.teamName || '',
+        team2: teamsData[1]?.teamName || '',
+        team3: teamsData[2]?.teamName || null,
+        team4: teamsData[3]?.teamName || null,
         team1_points: teamsData[0]?.points || 0,
         team2_points: teamsData[1]?.points || 0,
         team3_points: teamsData[2]?.points || null,
@@ -593,6 +593,17 @@ export default async function handler(req, res) {
         approved_by: null,
         approved_at: null
       };
+      
+      console.log('=== DEBUG: Dados dos Times ===');
+      console.log('teamsData recebido:', teamsData);
+      console.log('Quantidade de times:', teamsData.length);
+      teamsData.forEach((team, index) => {
+        console.log(`Time ${index + 1}:`, {
+          teamName: team.teamName,
+          participants: team.participants,
+          points: team.points
+        });
+      });
       
       console.log('Dados finais para Supabase:', coletivoData);
 
