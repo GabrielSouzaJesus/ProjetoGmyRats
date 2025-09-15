@@ -15,7 +15,7 @@ export const maintenanceConfig = {
   estimatedReturn: "Em breve",
   
   // Contato para suporte
-  supportContact: "contato@gymrats.com",
+  supportContact: "gabriel-itabuna@hotmail.com",
   
   // Configurações específicas para apuração
   apuration: {

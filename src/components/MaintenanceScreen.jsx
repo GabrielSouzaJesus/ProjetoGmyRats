@@ -126,7 +126,7 @@ export default function MaintenanceScreen() {
         {/* Footer */}
         <div className="mt-8 text-center animate-fade-in-delay-6">
           <p className="text-gray-400 text-sm">
-            © 2025 GymRats Challenge - Sistema em Apuração
+            © 2025 Desempenho - Sistema em Apuração
           </p>
         </div>
       </div>

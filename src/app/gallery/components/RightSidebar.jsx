@@ -54,7 +54,7 @@ export default function RightSidebar({ members, darkMode, currentUser }) {
           <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Idioma</a>
           <a href="#" className={`hover:${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Meta Verified</a>
         </div>
-        <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>© 2025 FITGRAM FROM GYMRATS</p>
+        <p className={`${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>© 2025 FITGRAM FROM DESEMPENHO</p>
       </div>
 
       {/* Floating Message Bar */}
