@@ -18,11 +18,12 @@ import { useAuth } from "../hooks/useAuth";
 import { useMaintenance } from "../hooks/useMaintenance";
 import { UsersIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 import MaintenanceScreen from "../components/MaintenanceScreen";
+import ApuracaoScreen from "../components/ApuracaoScreen";
 import MaintenanceControl from "../components/MaintenanceControl";
 
 export default function Home() {
   const { isAuthenticated, login } = useAuth();
-  const { isMaintenanceMode } = useMaintenance();
+  const { isMaintenanceMode, maintenanceMode } = useMaintenance();
   const [members, setMembers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [checkins, setCheckins] = useState([]);
@@ -110,8 +111,11 @@ export default function Home() {
     // return () => clearInterval(interval);
   }, []);
 
-  // Mostrar tela de manutenção se estiver ativa
+  // Mostrar tela de manutenção ou apuração se estiver ativa
   if (isMaintenanceMode) {
+    if (maintenanceMode === 'apuration') {
+      return <ApuracaoScreen />;
+    }
     return <MaintenanceScreen />;
   }
 

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { maintenanceConfig } from '../config/maintenance';
 
 export function useMaintenance() {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState('maintenance');
 
   useEffect(() => {
     // Verificar se o modo de manutenção está ativo
@@ -17,11 +19,14 @@ export function useMaintenance() {
       
       // Opção 2: Local storage (para testes rápidos)
       const localMaintenance = localStorage.getItem('maintenance-mode') === 'true';
+      const localMode = localStorage.getItem('maintenance-mode-type') || 'maintenance';
       
-      // Opção 3: Arquivo de configuração (você pode criar um arquivo maintenance.json)
-      // const configMaintenance = await fetch('/api/maintenance-status').then(res => res.json()).then(data => data.active);
+      // Opção 3: Configuração local
+      const configMaintenance = maintenanceConfig.isActive;
+      const configMode = maintenanceConfig.mode;
       
-      setIsMaintenanceMode(envMaintenance || localMaintenance);
+      setIsMaintenanceMode(envMaintenance || localMaintenance || configMaintenance);
+      setMaintenanceMode(localMode || configMode);
     };
 
     checkMaintenanceMode();
@@ -32,19 +37,38 @@ export function useMaintenance() {
     return () => clearInterval(interval);
   }, []);
 
-  const toggleMaintenanceMode = (active) => {
+  const toggleMaintenanceMode = (active, mode = 'maintenance') => {
     if (active !== undefined) {
       setIsMaintenanceMode(active);
+      setMaintenanceMode(mode);
       localStorage.setItem('maintenance-mode', active.toString());
+      localStorage.setItem('maintenance-mode-type', mode);
     } else {
       const newState = !isMaintenanceMode;
       setIsMaintenanceMode(newState);
       localStorage.setItem('maintenance-mode', newState.toString());
+      localStorage.setItem('maintenance-mode-type', mode);
     }
+  };
+
+  const activateApurationMode = () => {
+    toggleMaintenanceMode(true, 'apuration');
+  };
+
+  const activateMaintenanceMode = () => {
+    toggleMaintenanceMode(true, 'maintenance');
+  };
+
+  const deactivateMaintenance = () => {
+    toggleMaintenanceMode(false, 'maintenance');
   };
 
   return {
     isMaintenanceMode,
-    toggleMaintenanceMode
+    maintenanceMode,
+    toggleMaintenanceMode,
+    activateApurationMode,
+    activateMaintenanceMode,
+    deactivateMaintenance
   };
 }

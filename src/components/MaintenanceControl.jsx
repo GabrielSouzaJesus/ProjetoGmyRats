@@ -2,13 +2,20 @@ import { useState } from 'react';
 import { useMaintenance } from '../hooks/useMaintenance';
 
 export default function MaintenanceControl() {
-  const { isMaintenanceMode, toggleMaintenanceMode } = useMaintenance();
+  const { 
+    isMaintenanceMode, 
+    maintenanceMode, 
+    activateApurationMode, 
+    activateMaintenanceMode, 
+    deactivateMaintenance 
+  } = useMaintenance();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedMode, setSelectedMode] = useState('apuration');
 
   const handleToggle = () => {
     if (isMaintenanceMode) {
       // Se está ativo, pode desativar diretamente
-      toggleMaintenanceMode(false);
+      deactivateMaintenance();
     } else {
       // Se está inativo, pedir confirmação para ativar
       setShowConfirm(true);
@@ -16,7 +23,11 @@ export default function MaintenanceControl() {
   };
 
   const confirmActivation = () => {
-    toggleMaintenanceMode(true);
+    if (selectedMode === 'apuration') {
+      activateApurationMode();
+    } else {
+      activateMaintenanceMode();
+    }
     setShowConfirm(false);
   };
 
@@ -30,7 +41,10 @@ export default function MaintenanceControl() {
         <div className="flex items-center space-x-3">
           <div className={`w-3 h-3 rounded-full ${isMaintenanceMode ? 'bg-red-500' : 'bg-green-500'}`} />
           <span className="text-sm font-medium text-gray-700">
-            {isMaintenanceMode ? 'Sistema em Apuração' : 'Sistema Normal'}
+            {isMaintenanceMode 
+              ? (maintenanceMode === 'apuration' ? 'Sistema em Apuração' : 'Sistema em Manutenção')
+              : 'Sistema Normal'
+            }
           </span>
         </div>
         
@@ -59,14 +73,51 @@ export default function MaintenanceControl() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Ativar Modo de Apuração</h3>
+                <h3 className="font-semibold text-gray-900">Ativar Modo de Bloqueio</h3>
                 <p className="text-sm text-gray-500">Esta ação bloqueará o acesso ao dashboard</p>
+              </div>
+            </div>
+
+            {/* Seleção do tipo de modo */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Modo:
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="mode"
+                    value="apuration"
+                    checked={selectedMode === 'apuration'}
+                    onChange={(e) => setSelectedMode(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Modo Apuração</div>
+                    <div className="text-sm text-gray-500">Para fase final da competição</div>
+                  </div>
+                </label>
+                <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="mode"
+                    value="maintenance"
+                    checked={selectedMode === 'maintenance'}
+                    onChange={(e) => setSelectedMode(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Modo Manutenção</div>
+                    <div className="text-sm text-gray-500">Para manutenção técnica</div>
+                  </div>
+                </label>
               </div>
             </div>
             
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-yellow-800">
-                ⚠️ <strong>Atenção:</strong> Ao ativar o modo de apuração, todos os usuários serão redirecionados para a tela de "Sistema em Apuração" e não conseguirão acessar os rankings e dados da competição.
+                ⚠️ <strong>Atenção:</strong> Ao ativar qualquer modo, todos os usuários serão redirecionados para a tela correspondente e não conseguirão acessar os rankings e dados da competição.
               </p>
             </div>
             

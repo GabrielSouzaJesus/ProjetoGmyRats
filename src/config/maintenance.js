@@ -1,9 +1,12 @@
-// Configuração do modo de manutenção
+// Configuração do modo de manutenção/apuração
 export const maintenanceConfig = {
   // Ativar/desativar modo de manutenção
   // true = sistema em apuração (bloqueia acesso)
   // false = sistema normal (acesso liberado)
-  isActive: false,
+  isActive: true,
+  
+  // Tipo de manutenção: 'maintenance' ou 'apuration'
+  mode: 'apuration',
   
   // Mensagem personalizada (opcional)
   customMessage: "Estamos finalizando os cálculos e preparando as premiações da competição.",
@@ -12,7 +15,20 @@ export const maintenanceConfig = {
   estimatedReturn: "Em breve",
   
   // Contato para suporte
-  supportContact: "contato@gymrats.com"
+  supportContact: "contato@gymrats.com",
+  
+  // Configurações específicas para apuração
+  apuration: {
+    title: "Sistema em Apuração",
+    subtitle: "Fase Final da Competição",
+    messages: [
+      "Calculando pontuações finais...",
+      "Processando dados dos treinos...",
+      "Preparando rankings...",
+      "Finalizando premiações..."
+    ],
+    estimatedTime: "Em breve"
+  }
 };
 
 // Função para verificar se está em manutenção
