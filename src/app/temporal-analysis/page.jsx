@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { corrigirFusoHorario } from '../../lib/utils';
 import Link from 'next/link';
+import GenderSelector from '../../components/GenderSelector';
 
 export default function TemporalAnalysisPage() {
   const [data, setData] = useState({
@@ -16,6 +17,7 @@ export default function TemporalAnalysisPage() {
   });
 
   const [viewType, setViewType] = useState('patterns');
+  const [selectedGender, setSelectedGender] = useState("all");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -422,6 +424,7 @@ export default function TemporalAnalysisPage() {
   // NOVO: Componente de Análise de Intensidade
   const IntensityAnalysisView = () => {
     const sortedIntensity = Object.values(patterns.intensityAnalysis)
+      .filter(item => selectedGender === "all" || item.member.gender === selectedGender)
       .sort((a, b) => b.intensity - a.intensity)
       .slice(0, 5);
 
@@ -437,8 +440,14 @@ export default function TemporalAnalysisPage() {
               <span className="text-white text-lg sm:text-xl">💪</span>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Maior Intensidade</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Participantes com treinos mais intensos</p>
+              <h3 className="font-bold text-gray-900 text-lg sm:text-xl">
+                Maior Intensidade{selectedGender === "masculino" ? " - Masculino" : selectedGender === "feminino" ? " - Feminino" : ""}
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500">
+                {selectedGender === "all" ? "Ranking por intensidade (ordenação) • Exibe cal/dia" :
+                 selectedGender === "masculino" ? "Ranking masculino por intensidade (ordenação) • Exibe cal/dia" :
+                 "Ranking feminino por intensidade (ordenação) • Exibe cal/dia"}
+              </p>
             </div>
           </div>
           
@@ -457,7 +466,12 @@ export default function TemporalAnalysisPage() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 text-base sm:text-lg break-words">{item.member.name || item.member.full_name}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">{item.totalCheckins} treinos</div>
+                      <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                        <div>{item.totalCheckins} treinos</div>
+                        <div className="text-gray-500">
+                          {Math.round(item.avgCalories)} cal/treino • {Math.round(item.avgDuration)}min/treino
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -465,6 +479,12 @@ export default function TemporalAnalysisPage() {
                       {Math.round(item.avgCalories)}
                     </div>
                     <div className="text-xs text-gray-500">cal/dia</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Intensidade: ({Math.round(item.avgCalories)} × {Math.round(item.avgDuration)}) ÷ {item.totalCheckins}
+                    </div>
+                    <div className="text-xs text-gray-300 mt-1">
+                      = {Math.round(item.intensity)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -651,11 +671,21 @@ export default function TemporalAnalysisPage() {
         )}
 
         {viewType === 'insights' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-            <IntensityAnalysisView />
-            <TeamComparisonView />
-            <WeeklyPatternsView />
-            <ActivityTrendView />
+          <div className="space-y-6">
+            {/* Seletor de Gênero para Insights */}
+            <div className="flex justify-center">
+              <GenderSelector 
+                selectedGender={selectedGender}
+                onGenderChange={setSelectedGender}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+              <IntensityAnalysisView />
+              <TeamComparisonView />
+              <WeeklyPatternsView />
+              <ActivityTrendView />
+            </div>
           </div>
         )}
       </div>

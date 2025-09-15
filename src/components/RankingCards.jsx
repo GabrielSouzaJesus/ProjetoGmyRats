@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { TrophyIcon, FireIcon, BoltIcon } from '@heroicons/react/24/solid';
+import GenderSelector from './GenderSelector';
 
 const RankingCards = ({ members, checkins, checkInActivities = [], manualActivities = [] }) => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showVarietyModal, setShowVarietyModal] = useState(false);
+  const [selectedGender, setSelectedGender] = useState("all");
 
   // Mapeamento de traduções para tipos de atividades
   const activityTranslations = {
@@ -140,6 +142,7 @@ const RankingCards = ({ members, checkins, checkInActivities = [], manualActivit
       member: members.find(m => String(m.id) === String(memberId))
     }))
     .filter(item => item.member)
+    .filter(item => selectedGender === "all" || item.member.gender === selectedGender)
     .sort((a, b) => b.calories - a.calories)
     .slice(0, 5);
 
@@ -426,11 +429,23 @@ const RankingCards = ({ members, checkins, checkInActivities = [], manualActivit
 
   return (
     <div className="space-y-6">
+      {/* Seletor de Gênero */}
+      <div className="flex justify-center">
+        <GenderSelector 
+          selectedGender={selectedGender}
+          onGenderChange={setSelectedGender}
+        />
+      </div>
+      
       {/* Rankings principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RankingCard
-          title="Mais Calorias"
-          subtitle="Ranking de queima calórica"
+          title={`Mais Calorias${selectedGender === "masculino" ? " - Masculino" : selectedGender === "feminino" ? " - Feminino" : ""}`}
+          subtitle={
+            selectedGender === "all" ? "Ranking de queima calórica" :
+            selectedGender === "masculino" ? "Ranking de queima calórica masculino" :
+            "Ranking de queima calórica feminino"
+          }
           icon={<FireIcon className="h-6 w-6 text-orange-600" />}
           iconColor="bg-orange-100"
           ranking={calorieRanking}

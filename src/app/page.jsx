@@ -15,10 +15,14 @@ import ColetivoModal from "../components/ColetivoModal";
 import AdminApprovalModal from "../components/AdminApprovalModal";
 import AuthModal from "../components/AuthModal";
 import { useAuth } from "../hooks/useAuth";
+import { useMaintenance } from "../hooks/useMaintenance";
 import { UsersIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+import MaintenanceScreen from "../components/MaintenanceScreen";
+import MaintenanceControl from "../components/MaintenanceControl";
 
 export default function Home() {
   const { isAuthenticated, login } = useAuth();
+  const { isMaintenanceMode } = useMaintenance();
   const [members, setMembers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [checkins, setCheckins] = useState([]);
@@ -105,6 +109,11 @@ export default function Home() {
 
     // return () => clearInterval(interval);
   }, []);
+
+  // Mostrar tela de manutenção se estiver ativa
+  if (isMaintenanceMode) {
+    return <MaintenanceScreen />;
+  }
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -244,6 +253,9 @@ export default function Home() {
         challenge={challenge[0]}
       />
       {/* <ActivityPieChart activities={checkInActivities} /> */}
+      
+      {/* Controle de Manutenção - Apenas para Administradores */}
+      {isAuthenticated && <MaintenanceControl />}
     </Layout>
   );
 }
