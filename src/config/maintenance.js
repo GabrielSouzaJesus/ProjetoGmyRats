@@ -3,7 +3,7 @@ export const maintenanceConfig = {
   // Ativar/desativar modo de manutenção
   // true = sistema em apuração (bloqueia acesso)
   // false = sistema normal (acesso liberado)
-  isActive: true,
+  isActive: false,
   
   // Tipo de manutenção: 'maintenance' ou 'apuration'
   mode: 'apuration',
